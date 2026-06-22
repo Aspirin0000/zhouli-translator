@@ -322,11 +322,15 @@ export default function Home() {
     const width = 1200;
     const margin = 76;
     const textX = 154;
+    const textRight = width - 154;
     const bodyTop = 326;
-    const bodyFont = '40px "Songti SC", "STSong", "SimSun", serif';
-    const lineHeight = 67;
-    const contentWidth = width - textX * 2;
-    const dropCapReservedWidth = 54;
+    const bodyFont = '39px "Songti SC", "STSong", "SimSun", serif';
+    const firstCharacterFont = '700 70px "Songti SC", "STSong", serif';
+    const lineHeight = 66;
+    const contentWidth = textRight - textX;
+    const lineSafetyInset = 38;
+    const regularLineMaxWidth = contentWidth - lineSafetyInset;
+    const dropCapReservedWidth = 96;
     const probe = canvas.getContext("2d");
     if (!probe) return;
     probe.font = bodyFont;
@@ -342,10 +346,12 @@ export default function Home() {
       for (const char of paragraph) {
         const candidate = line + char;
         const maxLineWidth = firstBodyLinePending
-          ? contentWidth - dropCapReservedWidth
-          : contentWidth;
+          ? regularLineMaxWidth - dropCapReservedWidth
+          : regularLineMaxWidth;
         if (probe.measureText(candidate).width > maxLineWidth) {
-          lines.push(line);
+          if (line) {
+            lines.push(line);
+          }
           firstBodyLinePending = false;
           line = char;
         } else {
@@ -559,7 +565,6 @@ export default function Home() {
       if (line) {
         if (firstVisibleLine) {
           const [firstCharacter = "", ...restCharacters] = Array.from(line);
-          const firstCharacterFont = '700 70px "Songti SC", "STSong", serif';
 
           ctx.save();
           ctx.fillStyle = "#9e3228";
@@ -570,15 +575,17 @@ export default function Home() {
           const firstCharacterWidth = ctx.measureText(firstCharacter).width;
           ctx.fillStyle = "#2b241d";
           ctx.font = bodyFont;
+          const restX = textX + firstCharacterWidth + 12;
           ctx.fillText(
             restCharacters.join(""),
-            textX + firstCharacterWidth + 12,
+            restX,
             y,
+            Math.max(120, textRight - restX - lineSafetyInset),
           );
           ctx.restore();
           firstVisibleLine = false;
         } else {
-          ctx.fillText(line, textX, y);
+          ctx.fillText(line, textX, y, regularLineMaxWidth);
         }
         y += lineHeight;
       } else {
