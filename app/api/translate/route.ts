@@ -15,6 +15,9 @@ const VALID_MODES = new Set<ZhouliMode>([
   "lament",
 ]);
 const VALID_LEVELS = new Set<ZhouliLevel>(["light", "standard", "grand"]);
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+const RATE_WINDOW_LIMIT = 12;
+const RATE_DAY_LIMIT = 60;
 
 type RateRecord = {
   windowStartedAt: number;
@@ -37,9 +40,25 @@ function getClientKey(request: NextRequest) {
   return `${ip}:${clientId.slice(0, 80)}`;
 }
 
+function getShanghaiDay(now: number) {
+  return new Date(now + 8 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function secondsUntilNextShanghaiDay(now: number) {
+  const shanghaiNow = new Date(now + 8 * 60 * 60 * 1000);
+  const nextShanghaiMidnightUtc =
+    Date.UTC(
+      shanghaiNow.getUTCFullYear(),
+      shanghaiNow.getUTCMonth(),
+      shanghaiNow.getUTCDate() + 1,
+    ) -
+    8 * 60 * 60 * 1000;
+  return Math.max(1, Math.ceil((nextShanghaiMidnightUtc - now) / 1000));
+}
+
 function checkRateLimit(key: string) {
   const now = Date.now();
-  const today = new Date(now).toISOString().slice(0, 10);
+  const today = getShanghaiDay(now);
   const current = rateLimit.get(key);
 
   if (!current || current.day !== today) {
@@ -49,22 +68,60 @@ function checkRateLimit(key: string) {
       day: today,
       dayCount: 1,
     });
-    return { allowed: true, remaining: 59 };
+    return {
+      allowed: true,
+      remaining: Math.min(RATE_WINDOW_LIMIT - 1, RATE_DAY_LIMIT - 1),
+      windowRemaining: RATE_WINDOW_LIMIT - 1,
+      dailyRemaining: RATE_DAY_LIMIT - 1,
+      retryAfterSeconds: 0,
+    };
   }
 
-  if (now - current.windowStartedAt > 10 * 60 * 1000) {
+  if (now - current.windowStartedAt > RATE_WINDOW_MS) {
     current.windowStartedAt = now;
     current.count = 0;
   }
 
-  if (current.count >= 12 || current.dayCount >= 60) {
-    return { allowed: false, remaining: 0 };
+  const dailyRemainingBefore = Math.max(0, RATE_DAY_LIMIT - current.dayCount);
+  const windowRemainingBefore = Math.max(0, RATE_WINDOW_LIMIT - current.count);
+
+  if (current.dayCount >= RATE_DAY_LIMIT) {
+    return {
+      allowed: false,
+      reason: "day" as const,
+      remaining: 0,
+      windowRemaining: windowRemainingBefore,
+      dailyRemaining: 0,
+      retryAfterSeconds: secondsUntilNextShanghaiDay(now),
+    };
+  }
+
+  if (current.count >= RATE_WINDOW_LIMIT) {
+    return {
+      allowed: false,
+      reason: "window" as const,
+      remaining: 0,
+      windowRemaining: 0,
+      dailyRemaining: dailyRemainingBefore,
+      retryAfterSeconds: Math.max(
+        1,
+        Math.ceil((current.windowStartedAt + RATE_WINDOW_MS - now) / 1000),
+      ),
+    };
   }
 
   current.count += 1;
   current.dayCount += 1;
   rateLimit.set(key, current);
-  return { allowed: true, remaining: Math.max(0, 60 - current.dayCount) };
+  const dailyRemaining = Math.max(0, RATE_DAY_LIMIT - current.dayCount);
+  const windowRemaining = Math.max(0, RATE_WINDOW_LIMIT - current.count);
+  return {
+    allowed: true,
+    remaining: Math.min(dailyRemaining, windowRemaining),
+    windowRemaining,
+    dailyRemaining,
+    retryAfterSeconds: 0,
+  };
 }
 
 function demoResult(text: string, mode: ZhouliMode, level: ZhouliLevel) {
@@ -124,9 +181,21 @@ export async function POST(request: NextRequest) {
   const rate = checkRateLimit(key);
 
   if (!rate.allowed) {
+    const isWindowLimit = rate.reason === "window";
     return NextResponse.json(
-      { error: "今日问礼已多，请稍候再来。" },
-      { status: 429 },
+      {
+        error: isWindowLimit
+          ? `问礼太急，请约 ${Math.ceil(rate.retryAfterSeconds / 60)} 分钟后再来。`
+          : "今日问礼已满，请明日再来。",
+        remaining: rate.remaining,
+        windowRemaining: rate.windowRemaining,
+        dailyRemaining: rate.dailyRemaining,
+        retryAfterSeconds: rate.retryAfterSeconds,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSeconds) },
+      },
     );
   }
 
@@ -169,6 +238,9 @@ export async function POST(request: NextRequest) {
       model: "本地演示",
       demo: true,
       remaining: rate.remaining,
+      windowRemaining: rate.windowRemaining,
+      dailyRemaining: rate.dailyRemaining,
+      retryAfterSeconds: rate.retryAfterSeconds,
     });
   }
 
@@ -220,6 +292,9 @@ export async function POST(request: NextRequest) {
       demo: false,
       usage: data.usage,
       remaining: rate.remaining,
+      windowRemaining: rate.windowRemaining,
+      dailyRemaining: rate.dailyRemaining,
+      retryAfterSeconds: rate.retryAfterSeconds,
     });
   } catch (error) {
     console.error("Translate request failed:", error);

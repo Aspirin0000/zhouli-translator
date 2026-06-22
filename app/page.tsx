@@ -157,6 +157,8 @@ export default function Home() {
   const [skillCopyError, setSkillCopyError] = useState("");
   const [isDemo, setIsDemo] = useState(false);
   const [remaining, setRemaining] = useState<number | null>(null);
+  const [dailyRemaining, setDailyRemaining] = useState<number | null>(null);
+  const [retryAfterSeconds, setRetryAfterSeconds] = useState<number | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const cardImageRef = useRef<HTMLImageElement | null>(null);
 
@@ -209,6 +211,22 @@ export default function Home() {
     };
   }, []);
 
+  function updateRateInfo(data: {
+    remaining?: unknown;
+    dailyRemaining?: unknown;
+    retryAfterSeconds?: unknown;
+  }) {
+    setRemaining(typeof data.remaining === "number" ? data.remaining : null);
+    setDailyRemaining(
+      typeof data.dailyRemaining === "number" ? data.dailyRemaining : null,
+    );
+    setRetryAfterSeconds(
+      typeof data.retryAfterSeconds === "number" && data.retryAfterSeconds > 0
+        ? data.retryAfterSeconds
+        : null,
+    );
+  }
+
   async function translate() {
     if (!text.trim() || loading) return;
     setLoading(true);
@@ -227,13 +245,11 @@ export default function Home() {
       });
 
       const data = await response.json();
+      updateRateInfo(data);
       if (!response.ok) throw new Error(data.error || "礼官暂未回应。");
 
       setResult(data.result);
       setIsDemo(Boolean(data.demo));
-      setRemaining(
-        typeof data.remaining === "number" ? data.remaining : null,
-      );
       window.setTimeout(() => {
         resultRef.current?.scrollIntoView({
           behavior: "smooth",
@@ -849,7 +865,15 @@ export default function Home() {
                 </div>
                 <div className="result-meta">
                   <span>{isDemo ? "本地演示 · 配置 API 后启用大模型" : "DeepSeek 大儒已阅"}</span>
-                  {remaining !== null && <span>今日尚可问礼 {remaining} 次</span>}
+                  {remaining !== null && (
+                    <span>
+                      本轮尚可问礼 {remaining} 次
+                      {dailyRemaining !== null ? ` · 今日余 ${dailyRemaining} 次` : ""}
+                      {retryAfterSeconds !== null
+                        ? ` · 约 ${Math.ceil(retryAfterSeconds / 60)} 分钟后再问`
+                        : ""}
+                    </span>
+                  )}
                 </div>
               </>
             ) : (
