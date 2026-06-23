@@ -347,6 +347,33 @@ export default function Home() {
     );
   }
 
+  async function readJsonResponse(response: Response) {
+    try {
+      return await response.json();
+    } catch {
+      return {};
+    }
+  }
+
+  function getResponseErrorMessage(
+    response: Response,
+    data: { error?: unknown },
+  ) {
+    if (typeof data.error === "string" && data.error.trim()) {
+      return data.error;
+    }
+
+    if (response.status === 429) {
+      return "问礼太急，礼门暂闭，请稍后再来。";
+    }
+
+    if (response.status === 403) {
+      return "礼门暂设盘查，请稍后再试。";
+    }
+
+    return "礼官暂未回应，请稍后再试。";
+  }
+
   async function translate() {
     if (!text.trim() || loading) return;
     setLoading(true);
@@ -360,9 +387,11 @@ export default function Home() {
         getClientId(),
       );
 
-      const data = await response.json();
+      const data = await readJsonResponse(response);
       updateRateInfo(data);
-      if (!response.ok) throw new Error(data.error || "礼官暂未回应。");
+      if (!response.ok) {
+        throw new Error(getResponseErrorMessage(response, data));
+      }
 
       setResult(data.result);
       setIsDemo(Boolean(data.demo));
