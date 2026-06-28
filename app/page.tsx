@@ -53,6 +53,10 @@ const examples = [
   "NiKo十年终夺冠，这事怎么夸才合乎周礼",
 ];
 
+const originalVideoUrl =
+  "https://www.bilibili.com/video/BV12a7N6qE1g/?share_source=copy_web&vd_source=d792c5c82b0df6f527fe842ecd9dde6c";
+const githubUrl = "https://github.com/Aspirin0000";
+
 const loadingLines = [
   "正在正衣冠，辨名分",
   "正在查阅古代贤者旧事",
@@ -1029,6 +1033,13 @@ export default function Home() {
                     </span>
                   )}
                 </div>
+                <p className="result-support">
+                  若此器有用，可回{" "}
+                  <a href={originalVideoUrl} target="_blank" rel="noreferrer">
+                    原视频
+                  </a>{" "}
+                  赐一赞，以续礼官香火。
+                </p>
               </>
             ) : (
               <div className="empty-result">
@@ -1245,11 +1256,29 @@ export default function Home() {
             <small>言之有物，戏而有度</small>
           </span>
         </div>
-        <p>本工具用于语言娱乐与文化创作，生成内容请自行判断与核实。</p>
+        <div className="footer-note">
+          <p>本工具用于语言娱乐与文化创作，生成内容请自行判断与核实。</p>
+          <p>
+            若此器有用，可回{" "}
+            <a href={originalVideoUrl} target="_blank" rel="noreferrer">
+              原视频
+            </a>{" "}
+            赐一赞；若有失礼处，亦可在评论区进谏。
+          </p>
+          <p className="footer-sponsor">礼席虚位，以待良朋。合作可循原视频寻制礼者。</p>
+        </div>
         <div className="footer-right">
-          <span>周礼试行本 · 二〇二六</span>
+          <span>制礼者 Aspirin0000 · 二〇二六</span>
           <a
-            href="https://github.com/Aspirin0000"
+            href={originalVideoUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="合乎周礼 B 站原视频"
+          >
+            B站原视频
+          </a>
+          <a
+            href={githubUrl}
             target="_blank"
             rel="noreferrer"
             aria-label="Aspirin0000 GitHub"
