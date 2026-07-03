@@ -17,7 +17,9 @@
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-black">
   <img alt="Official" src="https://img.shields.io/badge/official-hehuzhouli.com-8b1e1e">
-  <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/Aspirin0000/zhouli-translator?style=flat&logo=github">
+  <a href="https://github.com/Aspirin0000/zhouli-translator">
+    <img alt="Official GitHub repository" src="https://img.shields.io/badge/GitHub-official_repo-black?logo=github">
+  </a>
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black">
   <img alt="React" src="https://img.shields.io/badge/React-19-149eca">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6">
