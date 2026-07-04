@@ -61,16 +61,6 @@ Skill 发布处。
 | 图片礼帖 | 将生成结果保存为适合传播的图片 |
 | 公开前审计 | 内置脚本扫描明显密钥与私钥块 |
 
-## Star History
-
-<a href="https://www.star-history.com/?type=date&repos=Aspirin0000%2Fzhouli-translator">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Aspirin0000/zhouli-translator&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Aspirin0000/zhouli-translator&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Aspirin0000/zhouli-translator&type=date&legend=top-left" />
- </picture>
-</a>
-
 ## Example
 
 Input:
@@ -272,3 +262,7 @@ Please run `npm run public:audit`, `npm test`, `npm run typecheck`, and
 ## License
 
 MIT License. See [LICENSE](LICENSE).
+
+## Star History
+
+<iframe style="width:100%;height:auto;min-width:600px;min-height:400px;" src="https://www.star-history.com/?repos=Aspirin0000%2Fzhouli-translator&type=date&legend=top-left" frameBorder="0"></iframe>
