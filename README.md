@@ -265,4 +265,4 @@ MIT License. See [LICENSE](LICENSE).
 
 ## Star History
 
-<iframe style="width:100%;height:auto;min-width:600px;min-height:400px;" src="https://www.star-history.com/?repos=Aspirin0000%2Fzhouli-translator&type=date&legend=top-left" frameBorder="0"></iframe>
+[![Star History Chart](https://api.star-history.com/chart?repos=Aspirin0000/zhouli-translator&type=date&legend=top-left)](https://www.star-history.com/?repos=Aspirin0000%2Fzhouli-translator&type=date&legend=top-left)
