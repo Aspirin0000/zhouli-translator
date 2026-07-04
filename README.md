@@ -5,6 +5,8 @@
 </p>
 
 <p align="center">
+  <a href="https://www.bilibili.com/video/BV12a7N6qE1g/">B站原视频</a>
+  ·
   <a href="https://hehuzhouli.com">在线体验</a>
   ·
   <a href="#quick-start">快速开始</a>
@@ -34,6 +36,8 @@
 白话翻译腔：先讲一个看似古代的道理，再把现代小事放进礼法、名分、职分和体面里一本正经地论证。
 
 在线版本：[hehuzhouli.com](https://hehuzhouli.com)
+
+B站原视频：[B站原视频](https://www.bilibili.com/video/BV12a7N6qE1g/)
 
 这是 [hehuzhouli.com](https://hehuzhouli.com) 原网站作者维护的官方开源仓库。
 若你是从视频、网页、转载或镜像项目来到这里，这里就是原版网站对应的源码与
