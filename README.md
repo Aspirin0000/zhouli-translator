@@ -64,7 +64,7 @@ Skill 发布处。
 ## Star History
 
 <a href="https://github.com/Aspirin0000/zhouli-translator/stargazers">
-  <img alt="GitHub Star History" src="public/images/github-star-history.svg">
+  <img alt="诸贤赐星记" src="public/images/github-star-history-zhouli.svg">
 </a>
 
 ## Example

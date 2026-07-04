@@ -4,7 +4,7 @@ import path from "node:path";
 const repo = process.env.STAR_HISTORY_REPO || "Aspirin0000/zhouli-translator";
 const outputPath =
   process.env.STAR_HISTORY_OUTPUT ||
-  path.join("public", "images", "github-star-history.svg");
+  path.join("public", "images", "github-star-history-zhouli.svg");
 const timeZone = "Asia/Shanghai";
 const githubToken = process.env.STAR_HISTORY_TOKEN || process.env.GITHUB_TOKEN;
 const maxSvgPoints = Math.max(
