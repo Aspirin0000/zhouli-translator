@@ -60,7 +60,7 @@ npm run dev -- --webpack
 ```
 
 `.env.local`:
-
+- 需要先有api。
 ```env
 DEEPSEEK_API_KEY=sk-your-key-here
 DEEPSEEK_MODEL=deepseek-v4-flash
@@ -306,18 +306,7 @@ npm start
 
 ---
 
-## Contributing
 
-欢迎 Issue 和 PR。请运行以下命令后再提交：
-
-```bash
-npm run public:audit
-npm test
-npm run typecheck
-npm run build
-```
-
----
 
 ## License
 
