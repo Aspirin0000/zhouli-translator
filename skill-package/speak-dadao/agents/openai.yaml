@@ -1,0 +1,4 @@
+interface:
+  display_name: "合乎大道"
+  short_description: "将现代中文改写为老子道德经式的白话译文腔——以柔克刚、反者道之动、无为而治"
+  default_prompt: "使用 $speak-dadao 把这句话改写成合道的白话译文。"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "合乎禅机"
+  short_description: "将现代人的困惑改写成禅宗古白话——棒喝、平常、参话、直指"
+  default_prompt: "使用 $speak-chan 把这句话改写成禅门直说的腔调。"

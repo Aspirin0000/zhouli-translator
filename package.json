@@ -13,7 +13,7 @@
     "url": "https://github.com/Aspirin0000/zhouli-translator/issues"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "test": "node --test scripts/*.test.ts",
