@@ -32,5 +32,5 @@ export function buildCardDownloadFilename(
   const parts = toShanghaiParts(date);
   const title = sanitizeFilenamePart(levelTitle);
   const digest = shortHash(`${levelTitle}\n${parts.date}\n${parts.time}\n${result}`);
-  return `合乎周礼-${title}-${parts.date}-${parts.time}-${digest}.png`;
+  return `儒释道-${title}-${parts.date}-${parts.time}-${digest}.png`;
 }

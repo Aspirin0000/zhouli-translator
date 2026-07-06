@@ -12,9 +12,238 @@
   --dark: #242622;
   --dark-soft: #30332e;
   --white: #fffdf8;
+  --accent: #6b7d5e;
+  --accent-deep: #4d5c43;
+  --accent-soft: #8fa383;
   --shadow: 0 28px 90px rgba(51, 38, 25, 0.13);
   --serif: "Songti SC", "STSong", "SimSun", "Noto Serif CJK SC", serif;
   --sans: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+
+[data-persona="laozi"] {
+  --red: #6b7d5e;
+  --red-deep: #4d5c43;
+  --red-soft: #8fa383;
+}
+
+[data-persona="laozi"] .assembly-image {
+  object-position: left top;
+}
+
+[data-persona="laozi"] .orbit-one {
+  top: 140px;
+  left: 4%;
+  transform: rotate(-22deg);
+}
+
+[data-persona="laozi"] .orbit-two {
+  right: 4%;
+  bottom: 240px;
+  transform: rotate(20deg);
+}
+
+[data-persona="laozi"] .hero-side-note.left {
+  left: 18px;
+  bottom: 160px;
+}
+
+[data-persona="laozi"] .hero-side-note.right {
+  right: 18px;
+  top: 160px;
+}
+
+[data-persona="laozi"] .assembly-corner::before,
+[data-persona="laozi"] .assembly-corner::after {
+  background: rgba(107, 125, 94, 0.54);
+}
+
+[data-persona="laozi"] .input-panel textarea:focus {
+  border-color: rgba(107, 125, 94, 0.6);
+  box-shadow: 0 0 0 3px rgba(107, 125, 94, 0.06);
+}
+
+[data-persona="laozi"] .example-row button:hover {
+  background: rgba(107, 125, 94, 0.04);
+  border-color: rgba(107, 125, 94, 0.34);
+}
+
+[data-persona="laozi"] .mode-grid button:hover {
+  border-color: rgba(107, 125, 94, 0.38);
+}
+
+[data-persona="laozi"] .mode-grid button.active {
+  background: rgba(107, 125, 94, 0.055);
+}
+
+[data-persona="laozi"] .mode-mark {
+  border-color: rgba(107, 125, 94, 0.42);
+}
+
+[data-persona="laozi"] .result-seal {
+  color: var(--red-soft);
+  border-color: rgba(143, 163, 131, 0.66);
+  box-shadow: inset 0 0 0 3px var(--dark), inset 0 0 0 4px rgba(143, 163, 131, 0.4);
+}
+
+[data-persona="laozi"] .skill-knot {
+  color: var(--red-deep);
+  box-shadow:
+    inset 0 0 0 5px #ebd8ba,
+    inset 0 0 0 6px rgba(77, 92, 67, 0.38);
+}
+
+[data-persona="laozi"] .skill-package-card {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.04), transparent 42%),
+    #3d4a3e;
+  border-color: #2d3a2e;
+}
+
+[data-persona="laozi"] .skill-copy-full {
+  color: var(--red-deep);
+  background: #d8d4c5;
+  border-color: #e0dbc8;
+  box-shadow:
+    inset 0 0 0 4px #d8d4c5,
+    inset 0 0 0 5px rgba(77, 92, 67, 0.24);
+}
+
+[data-persona="laozi"] .skill-copy-full:hover {
+  background: #e0dbc8;
+  box-shadow: 0 12px 28px rgba(30, 40, 30, 0.25);
+}
+
+[data-persona="laozi"] .skill-copy-full small {
+  color: rgba(77, 92, 67, 0.58);
+}
+
+[data-persona="laozi"] .install-steps li:not(:last-child)::after {
+  background: rgba(107, 125, 94, 0.22);
+}
+
+[data-persona="laozi"] .install-steps code {
+  color: var(--red-deep);
+  background: rgba(107, 125, 94, 0.06);
+  border-color: rgba(107, 125, 94, 0.13);
+}
+
+[data-persona="laozi"] .about-seal {
+  box-shadow: inset 0 0 0 6px #dcd0bc, inset 0 0 0 7px rgba(107, 125, 94, 0.65);
+}
+
+[data-persona="zen"] {
+  --red: #5c5c5c;
+  --red-deep: #3d3d3d;
+  --red-soft: #8f8f8f;
+}
+
+[data-persona="zen"] .assembly-image {
+  object-position: center center;
+}
+
+[data-persona="zen"] .orbit-one {
+  top: 130px;
+  left: 5%;
+  transform: rotate(-18deg);
+}
+
+[data-persona="zen"] .orbit-two {
+  right: 5%;
+  bottom: 220px;
+  transform: rotate(16deg);
+}
+
+[data-persona="zen"] .hero-side-note.left {
+  left: 14px;
+  bottom: 140px;
+}
+
+[data-persona="zen"] .hero-side-note.right {
+  right: 14px;
+  top: 140px;
+}
+
+[data-persona="zen"] .assembly-corner::before,
+[data-persona="zen"] .assembly-corner::after {
+  background: rgba(92, 92, 92, 0.54);
+}
+
+[data-persona="zen"] .input-panel textarea:focus {
+  border-color: rgba(92, 92, 92, 0.6);
+  box-shadow: 0 0 0 3px rgba(92, 92, 92, 0.06);
+}
+
+[data-persona="zen"] .example-row button:hover {
+  background: rgba(92, 92, 92, 0.04);
+  border-color: rgba(92, 92, 92, 0.34);
+}
+
+[data-persona="zen"] .mode-grid button:hover {
+  border-color: rgba(92, 92, 92, 0.38);
+}
+
+[data-persona="zen"] .mode-grid button.active {
+  background: rgba(92, 92, 92, 0.055);
+}
+
+[data-persona="zen"] .mode-mark {
+  border-color: rgba(92, 92, 92, 0.42);
+}
+
+[data-persona="zen"] .result-seal {
+  color: var(--red-soft);
+  border-color: rgba(143, 143, 143, 0.66);
+  box-shadow: inset 0 0 0 3px var(--dark), inset 0 0 0 4px rgba(143, 143, 143, 0.4);
+}
+
+[data-persona="zen"] .skill-knot {
+  color: var(--red-deep);
+  box-shadow:
+    inset 0 0 0 5px #ebd8ba,
+    inset 0 0 0 6px rgba(61, 61, 61, 0.38);
+}
+
+[data-persona="zen"] .skill-package-card {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.04), transparent 42%),
+    #3d3d3d;
+  border-color: #2d2d2d;
+}
+
+[data-persona="zen"] .skill-copy-full {
+  color: var(--red-deep);
+  background: #d8d4c5;
+  border-color: #e0dbc8;
+  box-shadow:
+    inset 0 0 0 4px #d8d4c5,
+    inset 0 0 0 5px rgba(61, 61, 61, 0.24);
+}
+
+[data-persona="zen"] .skill-copy-full:hover {
+  background: #e0dbc8;
+  box-shadow: 0 12px 28px rgba(30, 30, 30, 0.25);
+}
+
+[data-persona="zen"] .skill-copy-full small {
+  color: rgba(61, 61, 61, 0.58);
+}
+
+[data-persona="zen"] .install-steps li:not(:last-child)::after {
+  background: rgba(92, 92, 92, 0.22);
+}
+
+[data-persona="zen"] .install-steps code {
+  color: var(--red-deep);
+  background: rgba(92, 92, 92, 0.06);
+  border-color: rgba(92, 92, 92, 0.13);
+}
+
+[data-persona="zen"] .about-seal {
+  box-shadow: inset 0 0 0 6px #dcd0bc, inset 0 0 0 7px rgba(92, 92, 92, 0.65);
+}
+
+[data-persona="zen"] .hero h1 em::after {
+  background: url("data:image/svg+xml,%3Csvg width='400' height='10' viewBox='0 0 400 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 7C100 1 300 11 398 3' stroke='%235c5c5c' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
 }
 
 * {
@@ -160,6 +389,93 @@ main {
   letter-spacing: 0.2em;
 }
 
+.header-right {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.persona-wrapper {
+  position: relative;
+}
+
+.persona-toggle {
+  background: none;
+  border: 1px solid var(--bronze);
+  color: var(--bronze);
+  font: 500 11px/1 var(--serif);
+  letter-spacing: 0.2em;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: 180ms ease;
+}
+
+.persona-toggle:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.persona-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--paper-light);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  z-index: 100;
+  min-width: 130px;
+}
+
+.persona-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  font: 500 13px/1 var(--serif);
+  color: var(--ink);
+  cursor: pointer;
+  transition: 120ms;
+  text-align: left;
+}
+
+.persona-option:hover {
+  background: var(--paper-deep);
+  color: var(--red);
+}
+
+.persona-option.active {
+  color: var(--red);
+  background: var(--paper-deep);
+  font-weight: 700;
+}
+
+.persona-mark {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.persona-check {
+  margin-left: auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+.persona-label {
+  letter-spacing: 0.08em;
+}
+
 .hero {
   width: min(1400px, calc(100% - 80px));
   min-height: 680px;
@@ -229,6 +545,10 @@ main {
   bottom: -7px;
   opacity: 0.5;
   background: url("data:image/svg+xml,%3Csvg width='400' height='10' viewBox='0 0 400 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 7C100 1 300 11 398 3' stroke='%239e3228' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+
+[data-persona="laozi"] .hero h1 em::after {
+  background: url("data:image/svg+xml,%3Csvg width='400' height='10' viewBox='0 0 400 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 7C100 1 300 11 398 3' stroke='%236b7d5e' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
 }
 
 .hero-copy {
@@ -1727,6 +2047,10 @@ footer > span,
     display: none;
   }
 
+  .header-right {
+    gap: 10px;
+  }
+
   .hero {
     width: calc(100% - 40px);
   }
@@ -1802,6 +2126,26 @@ footer > span,
   .header-note {
     font-size: 9px;
     letter-spacing: 0.1em;
+  }
+
+  .header-right {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .persona-toggle {
+    font-size: 9px;
+    padding: 4px 8px;
+  }
+
+  .persona-dropdown {
+    min-width: 110px;
+  }
+
+  .persona-option {
+    font-size: 11px;
+    padding: 8px 12px;
   }
 
   .hero {
