@@ -1,10 +1,13 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const repo = process.env.STAR_HISTORY_REPO || "Aspirin0000/zhouli-translator";
 const outputPath =
   process.env.STAR_HISTORY_OUTPUT ||
   path.join("public", "images", "github-star-history-zhouli.svg");
+const historyPath =
+  process.env.STAR_HISTORY_DATA ||
+  path.join("public", "images", "github-star-history-zhouli.json");
 const timeZone = "Asia/Shanghai";
 const githubToken = process.env.STAR_HISTORY_TOKEN || process.env.GITHUB_TOKEN;
 const maxSvgPoints = Math.max(
@@ -28,11 +31,12 @@ async function requestJson(url, accept = "application/vnd.github+json") {
     headers,
   });
 
+  const body = await response.text();
   if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText}: ${url}`);
+    throw new Error(`${response.status} ${response.statusText}: ${url}${body ? ` (${body})` : ""}`);
   }
 
-  return response.json();
+  return JSON.parse(body);
 }
 
 async function fetchAllStargazers() {
@@ -51,6 +55,65 @@ async function fetchAllStargazers() {
   return stargazers
     .filter((item) => typeof item.starred_at === "string")
     .sort((a, b) => Date.parse(a.starred_at) - Date.parse(b.starred_at));
+}
+
+async function readHistory() {
+  try {
+    const data = JSON.parse(await readFile(historyPath, "utf8"));
+    return Array.isArray(data.starredAt)
+      ? data.starredAt.filter((value) => Number.isFinite(Date.parse(value)))
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+async function fetchRecentStarEvents(latestKnownTime) {
+  const starredAt = [];
+  let page = 1;
+
+  while (page <= 10) {
+    const items = await requestJson(
+      `https://api.github.com/repos/${repo}/events?per_page=100&page=${page}`,
+    );
+    if (!Array.isArray(items) || items.length === 0) break;
+
+    let reachedKnownHistory = false;
+    for (const item of items) {
+      if (item.type !== "WatchEvent" || item.payload?.action !== "started") continue;
+      const createdAt = item.created_at;
+      if (typeof createdAt !== "string") continue;
+      if (latestKnownTime && Date.parse(createdAt) <= latestKnownTime) {
+        reachedKnownHistory = true;
+        continue;
+      }
+      starredAt.push(createdAt);
+    }
+
+    if (reachedKnownHistory || items.length < 100) break;
+    page += 1;
+  }
+
+  return starredAt;
+}
+
+async function collectStarHistory(repoInfo) {
+  try {
+    const stargazers = await fetchAllStargazers();
+    return stargazers.map((item) => item.starred_at);
+  } catch (error) {
+    const existing = await readHistory();
+    const latestKnownTime = existing.reduce(
+      (latest, value) => Math.max(latest, Date.parse(value)),
+      0,
+    );
+    const recentEvents = await fetchRecentStarEvents(latestKnownTime);
+    const merged = [...existing, ...recentEvents];
+    const unique = [...new Set(merged)].sort((a, b) => Date.parse(a) - Date.parse(b));
+
+    console.warn(`Stargazer endpoint unavailable; using event fallback: ${error.message}`);
+    return unique;
+  }
 }
 
 function escapeXml(value) {
@@ -329,10 +392,26 @@ function buildSvg({ repoInfo, stargazers, generatedAt }) {
 }
 
 const repoInfo = await requestJson(`https://api.github.com/repos/${repo}`);
-const stargazers = await fetchAllStargazers();
+let starredAt = await collectStarHistory(repoInfo);
+const starCount = repoInfo.stargazers_count ?? starredAt.length;
+const latestKnown = starredAt.at(-1);
+
+// Events can be delayed or omitted by GitHub's rolling event feed. Keep the
+// chart honest about the current count while preserving all known timestamps.
+while (starredAt.length < starCount) {
+  starredAt.push(latestKnown || new Date().toISOString());
+}
+
+starredAt = starredAt.slice(-Math.max(starCount, 1)).sort((a, b) => Date.parse(a) - Date.parse(b));
+const stargazers = starredAt.map((starred_at) => ({ starred_at }));
 const svg = buildSvg({ repoInfo, stargazers, generatedAt: new Date() });
 
 await mkdir(path.dirname(outputPath), { recursive: true });
 await writeFile(outputPath, svg, "utf8");
+await writeFile(
+  historyPath,
+  `${JSON.stringify({ repo, starredAt }, null, 2)}\n`,
+  "utf8",
+);
 
 console.log(`Wrote ${outputPath} with ${repoInfo.stargazers_count ?? stargazers.length} stars.`);

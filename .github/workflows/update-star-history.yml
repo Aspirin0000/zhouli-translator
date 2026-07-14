@@ -5,6 +5,10 @@ on:
     - cron: "0 * * * *"
   workflow_dispatch:
 
+concurrency:
+  group: update-star-history
+  cancel-in-progress: false
+
 jobs:
   refresh-star-chart:
     runs-on: ubuntu-latest
@@ -25,6 +29,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add public/images/github-star-history-zhouli.svg
+          git add public/images/github-star-history-zhouli.json
           if git diff --cached --quiet; then
             echo "No star chart changes detected."
             exit 0
