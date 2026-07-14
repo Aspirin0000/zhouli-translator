@@ -570,8 +570,13 @@ export default function Home() {
     }
   }
 
-  function downloadCard() {
+  async function downloadCard() {
     if (!result) return;
+
+    await Promise.all([
+      document.fonts.load("400 39px \"Zhouli Serif Full\""),
+      document.fonts.load("600 70px \"Zhouli Serif Full\""),
+    ]);
 
     const canvas = document.createElement("canvas");
     const width = 1200;
@@ -579,8 +584,10 @@ export default function Home() {
     const textX = 154;
     const textRight = width - 154;
     const bodyTop = 326;
-    const bodyFont = '39px "Songti SC", "STSong", "SimSun", serif';
-    const firstCharacterFont = '700 70px "Songti SC", "STSong", serif';
+    const uiSerif = '"Zhouli Serif UI", serif';
+    const dynamicSerif = '"Zhouli Serif Full", "Zhouli Serif UI", serif';
+    const bodyFont = `39px ${dynamicSerif}`;
+    const firstCharacterFont = `600 70px ${dynamicSerif}`;
     const lineHeight = 66;
     const contentWidth = textRight - textX;
     const lineSafetyInset = 38;
@@ -690,10 +697,10 @@ export default function Home() {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       if (text.length === 1) {
-        ctx.font = `700 ${Math.floor(size * 0.54)}px "Songti SC", serif`;
+        ctx.font = `500 ${Math.floor(size * 0.54)}px ${uiSerif}`;
         ctx.fillText(text, x + size / 2, y + size / 2 + 2);
       } else {
-        ctx.font = `700 ${Math.floor(size * 0.34)}px "Songti SC", serif`;
+        ctx.font = `500 ${Math.floor(size * 0.34)}px ${uiSerif}`;
         Array.from(text).forEach((char, index) => {
           ctx.fillText(char, x + size / 2, y + size * (0.34 + index * 0.28));
         });
@@ -751,7 +758,7 @@ export default function Home() {
     ctx.save();
     ctx.globalAlpha = 0.045;
     ctx.fillStyle = "#8c342a";
-    ctx.font = '700 520px "Songti SC", "STSong", serif';
+    ctx.font = `600 520px ${uiSerif}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("礼", width / 2, height / 2 + 12);
@@ -787,10 +794,10 @@ export default function Home() {
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#211d18";
-    ctx.font = '700 72px "Songti SC", "STSong", serif';
+    ctx.font = `600 72px ${uiSerif}`;
     ctx.fillText("合乎周礼", 238, 137);
     ctx.fillStyle = "#7c6d59";
-    ctx.font = '26px "Songti SC", "STSong", serif';
+    ctx.font = `400 26px ${uiSerif}`;
     ctx.fillText(cardSubTitle, 242, 183);
     ctx.fillStyle = "rgba(136, 48, 39, 0.86)";
     ctx.font = '600 15px "PingFang SC", sans-serif';
@@ -803,7 +810,7 @@ export default function Home() {
       width - 124,
       92,
       34,
-      '600 24px "Songti SC", serif',
+      `600 24px ${uiSerif}`,
       "rgba(136, 48, 39, 0.86)",
     );
     ctx.strokeStyle = "rgba(158, 50, 40, 0.78)";
@@ -832,7 +839,7 @@ export default function Home() {
 
           ctx.save();
           ctx.fillStyle = "#9e3228";
-          ctx.font = '46px "Songti SC", serif';
+          ctx.font = `400 46px ${uiSerif}`;
           ctx.fillText("「", textX - 48, y - 5);
           ctx.font = firstCharacterFont;
           ctx.fillText(firstCharacter, textX, y + 3);
@@ -867,11 +874,11 @@ export default function Home() {
     ctx.restore();
 
     ctx.fillStyle = "#9e3228";
-    ctx.font = '600 25px "Songti SC", serif';
+    ctx.font = `600 25px ${uiSerif}`;
     ctx.textAlign = "left";
     ctx.fillText(`${cardMetaLabel} · ${cardStyleTitle} · ${levelTitle}`, 112, height - 118);
     ctx.fillStyle = "#7a6d5b";
-    ctx.font = '22px "Songti SC", serif';
+    ctx.font = `400 22px ${uiSerif}`;
     ctx.fillText(isPlainDirection ? "礼文既释，原意可明" : "一言既出，众贤共阅", 112, height - 80);
 
     const footerSealSize = 66;
@@ -879,7 +886,7 @@ export default function Home() {
     drawSeal(footerSealX, height - 151, footerSealSize, "善");
     ctx.textAlign = "right";
     ctx.fillStyle = "#7a6d5b";
-    ctx.font = '22px "Songti SC", serif';
+    ctx.font = `400 22px ${uiSerif}`;
     ctx.fillText(cardFooterTitle, footerSealX - 28, height - 101);
     ctx.font = '15px "PingFang SC", sans-serif';
     ctx.fillText(cardFooterNote, footerSealX - 28, height - 74);

@@ -1,3 +1,43 @@
+@font-face {
+  font-family: "Zhouli Serif UI";
+  src: url("/fonts/zhouli-serif-ui-400.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Zhouli Serif UI";
+  src: url("/fonts/zhouli-serif-ui-500.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Zhouli Serif UI";
+  src: url("/fonts/zhouli-serif-ui-600.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Zhouli Serif Full";
+  src: url("/fonts/zhouli-serif-full-400.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Zhouli Serif Full";
+  src: url("/fonts/zhouli-serif-full-600.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
 :root {
   --paper: #eee6d6;
   --paper-light: #f8f3e9;
@@ -13,7 +53,8 @@
   --dark-soft: #30332e;
   --white: #fffdf8;
   --shadow: 0 28px 90px rgba(51, 38, 25, 0.13);
-  --serif: "Songti SC", "STSong", "SimSun", "Noto Serif CJK SC", serif;
+  --serif: "Zhouli Serif UI", "Songti SC", "STSong", "SimSun", "Noto Serif CJK SC", serif;
+  --serif-dynamic: "Zhouli Serif Full", "Zhouli Serif UI", "Songti SC", "STSong", "SimSun", "Noto Serif CJK SC", serif;
   --sans: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
 }
 
@@ -30,6 +71,7 @@ body {
   color: var(--ink);
   background: var(--paper);
   font-family: var(--sans);
+  font-synthesis: none;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -99,7 +141,7 @@ main {
   background: var(--red);
   border: 1px solid var(--red-deep);
   box-shadow: inset 0 0 0 5px var(--red), inset 0 0 0 6px rgba(248, 232, 200, 0.65);
-  font: 700 27px/1 var(--serif);
+  font: 500 27px/1 var(--serif);
 }
 
 .brand > span:last-child {
@@ -109,7 +151,7 @@ main {
 }
 
 .brand strong {
-  font: 700 22px/1.1 var(--serif);
+  font: 600 22px/1.1 var(--serif);
   letter-spacing: 0.12em;
 }
 
@@ -208,7 +250,7 @@ main {
 
 .hero h1 {
   margin: 30px 0 25px;
-  font: 700 clamp(60px, 7.2vw, 112px)/1.06 var(--serif);
+  font: 600 clamp(60px, 7.2vw, 112px)/1.06 var(--serif);
   letter-spacing: 0.03em;
   position: relative;
   z-index: 1;
@@ -253,7 +295,7 @@ main {
   background: var(--red);
   border: 1px solid var(--red-deep);
   box-shadow: inset 0 0 0 4px var(--red), inset 0 0 0 5px rgba(255, 239, 212, 0.34);
-  font: 600 14px/1 var(--serif);
+  font: 500 14px/1 var(--serif);
   letter-spacing: 0.22em;
   transition: 180ms ease;
   position: relative;
@@ -410,7 +452,7 @@ main {
   box-shadow:
     inset 0 0 0 4px var(--red),
     inset 0 0 0 5px rgba(248, 232, 200, 0.66);
-  font: 700 24px/1 var(--serif);
+  font: 500 24px/1 var(--serif);
   transform: rotate(-3deg);
 }
 
@@ -428,7 +470,7 @@ main {
 
 .assembly-inscription h2 {
   margin: 14px 0 17px;
-  font: 700 clamp(28px, 3vw, 43px)/1.22 var(--serif);
+  font: 600 clamp(28px, 3vw, 43px)/1.22 var(--serif);
   letter-spacing: 0.04em;
 }
 
@@ -553,7 +595,7 @@ main {
 
 .section-heading h2 {
   margin-top: 8px;
-  font: 700 clamp(28px, 3vw, 42px)/1.1 var(--serif);
+  font: 600 clamp(28px, 3vw, 42px)/1.1 var(--serif);
   letter-spacing: 0.04em;
 }
 
@@ -591,7 +633,7 @@ main {
   justify-content: center;
   color: var(--red);
   border: 1px solid var(--red-soft);
-  font: 600 11px/1 var(--serif);
+  font: 500 11px/1 var(--serif);
   letter-spacing: 0.16em;
 }
 
@@ -602,7 +644,7 @@ main {
 
 .panel-heading h3 {
   margin: 12px 0 0;
-  font: 700 26px/1.15 var(--serif);
+  font: 600 26px/1.15 var(--serif);
 }
 
 .character-count {
@@ -628,8 +670,12 @@ main {
     rgba(235, 225, 208, 0.25);
   border: 1px solid var(--line);
   border-radius: 0;
-  font: 400 17px/2.35 var(--serif);
+  font: 400 17px/2.35 var(--serif-dynamic);
   transition: 160ms ease;
+}
+
+.input-panel textarea:placeholder-shown {
+  font-family: var(--serif);
 }
 
 .input-panel textarea::placeholder {
@@ -678,7 +724,7 @@ main {
 }
 
 .direction-switch strong {
-  font: 600 15px/1 var(--serif);
+  font: 500 15px/1 var(--serif);
   letter-spacing: 0.14em;
 }
 
@@ -784,7 +830,7 @@ main {
   color: var(--red);
   border: 1px solid rgba(158, 50, 40, 0.42);
   border-radius: 50%;
-  font: 600 17px/1 var(--serif);
+  font: 500 17px/1 var(--serif);
 }
 
 .mode-grid button > span:last-child {
@@ -794,7 +840,7 @@ main {
 }
 
 .mode-grid strong {
-  font: 600 14px/1 var(--serif);
+  font: 500 14px/1 var(--serif);
   letter-spacing: 0.08em;
 }
 
@@ -871,7 +917,7 @@ main {
   background: var(--red);
   border: 1px solid var(--red-deep);
   box-shadow: inset 0 0 0 4px var(--red), inset 0 0 0 5px rgba(255, 239, 212, 0.32);
-  font: 600 15px/1 var(--serif);
+  font: 500 15px/1 var(--serif);
   letter-spacing: 0.2em;
   transition: 180ms ease;
 }
@@ -986,7 +1032,7 @@ main {
   color: #da8877;
   border: 2px solid rgba(194, 91, 72, 0.66);
   box-shadow: inset 0 0 0 3px var(--dark), inset 0 0 0 4px rgba(194, 91, 72, 0.4);
-  font: 600 13px/1.15 var(--serif);
+  font: 500 13px/1.15 var(--serif);
   letter-spacing: 0.08em;
   writing-mode: vertical-rl;
   transform: rotate(-4deg);
@@ -1012,7 +1058,7 @@ main {
   border: 1px solid rgba(232, 216, 187, 0.13);
   border-radius: 50%;
   box-shadow: inset 0 0 0 18px var(--dark), inset 0 0 0 19px rgba(232, 216, 187, 0.08);
-  font: 700 72px/1 var(--serif);
+  font: 600 72px/1 var(--serif);
 }
 
 .empty-result p {
@@ -1041,7 +1087,7 @@ main {
 .result-content p {
   margin: 0 0 17px;
   color: #f0e8da;
-  font: 400 17px/2.05 var(--serif);
+  font: 400 17px/2.05 var(--serif-dynamic);
   letter-spacing: 0.04em;
 }
 
@@ -1135,7 +1181,7 @@ main {
   right: -22px;
   top: -60px;
   color: rgba(94, 71, 44, 0.035);
-  font: 700 390px/1 var(--serif);
+  font: 600 390px/1 var(--serif);
   pointer-events: none;
 }
 
@@ -1151,7 +1197,7 @@ main {
 
 .skill-heading h2 {
   margin: 16px 0 0;
-  font: 700 clamp(38px, 4.5vw, 65px)/1.16 var(--serif);
+  font: 600 clamp(38px, 4.5vw, 65px)/1.16 var(--serif);
   letter-spacing: 0.03em;
 }
 
@@ -1230,7 +1276,7 @@ main {
   box-shadow:
     inset 0 0 0 5px #ebd8ba,
     inset 0 0 0 6px rgba(118, 42, 36, 0.38);
-  font: 700 34px/1 var(--serif);
+  font: 500 34px/1 var(--serif);
   transform: rotate(-3deg);
 }
 
@@ -1374,7 +1420,7 @@ main {
 
 .skill-copy-full strong,
 .skill-download strong {
-  font: 600 14px/1 var(--serif);
+  font: 500 14px/1 var(--serif);
   letter-spacing: 0.1em;
 }
 
@@ -1458,7 +1504,7 @@ main {
 
 .install-title h3 {
   margin: 7px 0 0;
-  font: 700 25px/1 var(--serif);
+  font: 600 25px/1 var(--serif);
 }
 
 .install-steps {
@@ -1496,7 +1542,7 @@ main {
   color: #f7e7ca;
   background: var(--red);
   border-radius: 50%;
-  font: 600 12px/1 var(--serif);
+  font: 500 12px/1 var(--serif);
   position: relative;
   z-index: 1;
 }
@@ -1572,7 +1618,7 @@ main {
   right: 6%;
   top: 12px;
   color: rgba(239, 224, 198, 0.025);
-  font: 700 330px/1 var(--serif);
+  font: 600 330px/1 var(--serif);
 }
 
 .section-heading.light .section-number {
@@ -1658,7 +1704,7 @@ main {
   color: var(--red);
   border: 2px solid var(--red);
   box-shadow: inset 0 0 0 6px #dcd0bc, inset 0 0 0 7px rgba(158, 50, 40, 0.65);
-  font: 700 29px/1 var(--serif);
+  font: 500 29px/1 var(--serif);
   transform: rotate(-3deg);
 }
 
@@ -1671,7 +1717,7 @@ main {
 .about-section h2 {
   max-width: 510px;
   margin: 17px 0 0;
-  font: 700 clamp(28px, 3vw, 43px)/1.35 var(--serif);
+  font: 600 clamp(28px, 3vw, 43px)/1.35 var(--serif);
 }
 
 .about-section > p {
