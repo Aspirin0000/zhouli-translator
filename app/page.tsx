@@ -393,6 +393,11 @@ export default function Home() {
   const activeLevels = isPlainDirection ? plainLevels : levels;
   const activeDirectionVerb = isPlainDirection ? "释礼" : "问礼";
 
+  function syncInputText(value: string) {
+    setText(value.slice(0, inputLimit));
+    setError("");
+  }
+
   useEffect(() => {
     if (!loading) return;
     const timer = window.setInterval(() => {
@@ -1034,10 +1039,9 @@ export default function Home() {
 
             <textarea
               value={text}
-              onChange={(event) => {
-                setText(event.target.value.slice(0, inputLimit));
-                setError("");
-              }}
+              onInput={(event) => syncInputText(event.currentTarget.value)}
+              onChange={(event) => syncInputText(event.currentTarget.value)}
+              onCompositionEnd={(event) => syncInputText(event.currentTarget.value)}
               placeholder={
                 isPlainDirection
                   ? "粘贴一段周礼体，例如：我听闻，古人设宴……"
