@@ -26,3 +26,11 @@ test("keeps controlled textarea state in sync with iPad input events", () => {
 test("character count remains derived from synchronized textarea state", () => {
   assert.match(pageSource, /\{text\.length\} \/ \{inputLimit\}/);
 });
+
+test("rereads the native textarea after WebKit commits IME text", () => {
+  assert.match(pageSource, /const inputRef = useRef<HTMLTextAreaElement>\(null\)/);
+  assert.match(pageSource, /ref=\{inputRef\}/);
+  assert.match(pageSource, /addEventListener\("input", syncNativeValue\)/);
+  assert.match(pageSource, /addEventListener\("compositionend", syncNativeValue\)/);
+  assert.match(pageSource, /requestAnimationFrame\(readNativeValue\)/);
+});

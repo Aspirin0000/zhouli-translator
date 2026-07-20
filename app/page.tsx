@@ -371,6 +371,7 @@ export default function Home() {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [dailyRemaining, setDailyRemaining] = useState<number | null>(null);
   const [retryAfterSeconds, setRetryAfterSeconds] = useState<number | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const cardImageRef = useRef<HTMLImageElement | null>(null);
 
@@ -397,6 +398,34 @@ export default function Home() {
     setText(value.slice(0, inputLimit));
     setError("");
   }
+
+  useEffect(() => {
+    const element = inputRef.current;
+    if (!element) return;
+
+    let animationFrame = 0;
+    const readNativeValue = () => {
+      const value = element.value.slice(0, inputLimit);
+      setText(value);
+      setError("");
+    };
+    const syncNativeValue = () => {
+      readNativeValue();
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = window.requestAnimationFrame(readNativeValue);
+    };
+
+    element.addEventListener("input", syncNativeValue);
+    element.addEventListener("change", syncNativeValue);
+    element.addEventListener("compositionend", syncNativeValue);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      element.removeEventListener("input", syncNativeValue);
+      element.removeEventListener("change", syncNativeValue);
+      element.removeEventListener("compositionend", syncNativeValue);
+    };
+  }, [inputLimit]);
 
   useEffect(() => {
     if (!loading) return;
@@ -1038,6 +1067,7 @@ export default function Home() {
             </div>
 
             <textarea
+              ref={inputRef}
               value={text}
               onInput={(event) => syncInputText(event.currentTarget.value)}
               onChange={(event) => syncInputText(event.currentTarget.value)}
