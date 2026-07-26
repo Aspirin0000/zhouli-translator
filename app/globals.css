@@ -1166,7 +1166,7 @@ main {
 .feedback-thanks,
 .feedback-message {
   color: rgba(226, 163, 143, 0.76);
-  font: 400 11px/1.6 var(--serif);
+  font: 400 11px/1.6 var(--serif-dynamic);
 }
 
 .negative-reasons,

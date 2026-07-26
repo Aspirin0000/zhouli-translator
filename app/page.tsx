@@ -440,6 +440,7 @@ export default function Home() {
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
   const [showCaseConsent, setShowCaseConsent] = useState(false);
   const [caseConsent, setCaseConsent] = useState(false);
+  const [caseSubmitted, setCaseSubmitted] = useState(false);
   const [caseMessage, setCaseMessage] = useState("");
   const [sourceText, setSourceText] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -603,6 +604,7 @@ export default function Home() {
     setFeedbackMessage("");
     setShowCaseConsent(false);
     setCaseConsent(false);
+    setCaseSubmitted(false);
     setCaseMessage("");
     setShowPrivacyNotice(false);
     setSourceText("");
@@ -682,6 +684,7 @@ export default function Home() {
       setFeedbackMessage("");
       setShowCaseConsent(false);
       setCaseConsent(false);
+      setCaseSubmitted(false);
       setCaseMessage("");
       setSourceText(text.trim());
       if (typeof data.feedback_token === "string" && data.feedback_token && !hasSeenPrivacyNotice()) {
@@ -779,6 +782,7 @@ export default function Home() {
       setCaseMessage("案例已匿名收下，感谢帮忙改进。");
       setShowCaseConsent(false);
       setCaseConsent(false);
+      setCaseSubmitted(true);
     } catch (requestError) {
       setCaseMessage(
         requestError instanceof Error ? requestError.message : "案例暂未收下，请稍后再试。",
@@ -1532,7 +1536,7 @@ export default function Home() {
                         </button>
                       </div>
                     )}
-                    {feedbackSubmitted && feedbackReasons.length > 0 && !showCaseConsent && feedbackToken && (
+                    {feedbackSubmitted && feedbackReasons.length > 0 && !caseSubmitted && !showCaseConsent && feedbackToken && (
                       <button
                         className="case-submit-link"
                         type="button"

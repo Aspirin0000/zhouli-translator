@@ -116,6 +116,16 @@ test("feedback success renders one thank-you message", () => {
   assert.equal(page.match(/感谢反馈，礼官已记下。/g)?.length, 1);
 });
 
+test("feedback status uses the full serif font without per-character fallback", () => {
+  const styles = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+  const rule =
+    styles.match(
+      /\.feedback-thanks,\s*\.feedback-message\s*\{([\s\S]*?)\}/,
+    )?.[1] ?? "";
+
+  assert.match(rule, /font:\s*400 11px\/1\.6 var\(--serif-dynamic\)/);
+});
+
 test("negative feedback exposes a prominent case submission action", () => {
   const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
   const styles = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
@@ -127,4 +137,15 @@ test("negative feedback exposes a prominent case submission action", () => {
   assert.match(rule, /width:\s*100%/);
   assert.match(rule, /min-height:\s*44px/);
   assert.match(rule, /justify-content:\s*space-between/);
+});
+
+test("accepted cases do not expose the submission action again", () => {
+  const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+
+  assert.match(page, /const \[caseSubmitted, setCaseSubmitted\] = useState\(false\)/);
+  assert.match(page, /setCaseSubmitted\(true\)/);
+  assert.match(
+    page,
+    /feedbackSubmitted && feedbackReasons\.length > 0 && !caseSubmitted && !showCaseConsent && feedbackToken/,
+  );
 });
