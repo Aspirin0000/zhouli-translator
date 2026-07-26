@@ -28,6 +28,10 @@ test("accepts only documented release channels, events, and reasons", () => {
   assert.equal(isEventType("case_submit"), true);
   assert.equal(isEventType("delete_user"), false);
   assert.equal(isNegativeReason("meaning_drift"), true);
+  assert.equal(isNegativeReason("unclear_explanation"), true);
+  assert.equal(isNegativeReason("unnatural_plain"), true);
+  assert.equal(isNegativeReason("missed_subtext"), true);
+  assert.equal(isNegativeReason("overinterpreted"), true);
   assert.equal(isNegativeReason("ip_address"), false);
 });
 
@@ -108,12 +112,44 @@ test("feedback UI sends custom detail for the other reason", () => {
   const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
   assert.match(page, /feedbackOtherReason/);
   assert.match(page, /reason_detail/);
-  assert.match(page, /placeholder=.*具体说明/);
+  assert.match(page, /placeholder=\{activeFeedback\.otherPlaceholder\}/);
+  assert.match(page, /otherPlaceholder:\s*"请具体说明哪里不合适"/);
+  assert.match(page, /otherPlaceholder:\s*"请具体说明哪里释得不准"/);
 });
 
 test("feedback success renders one thank-you message", () => {
   const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
   assert.equal(page.match(/感谢反馈，礼官已记下。/g)?.length, 1);
+});
+
+test("feedback UI derives labels and reasons from the active direction", () => {
+  const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+
+  assert.match(page, /const feedbackConfigs/);
+  assert.match(page, /positiveLabel:\s*"👍 合乎周礼"/);
+  assert.match(page, /negativeLabel:\s*"👎 不够周礼"/);
+  assert.match(page, /positiveLabel:\s*"👍 释得明白"/);
+  assert.match(page, /negativeLabel:\s*"👎 释得不准"/);
+  assert.match(page, /id:\s*"unclear_explanation",\s*label:\s*"还是没说清"/);
+  assert.match(page, /id:\s*"unnatural_plain",\s*label:\s*"不像日常人话"/);
+  assert.match(page, /id:\s*"missed_subtext",\s*label:\s*"漏掉潜台词"/);
+  assert.match(page, /id:\s*"overinterpreted",\s*label:\s*"过度解读"/);
+  assert.match(page, /const activeFeedback = feedbackConfigs\[direction\]/);
+  assert.match(page, /\{activeFeedback\.positiveLabel\}/);
+  assert.match(page, /\{activeFeedback\.negativeLabel\}/);
+  assert.match(page, /activeFeedback\.reasons\.map/);
+});
+
+test("generation analytics distinguish ask and explain modes", () => {
+  const route = readFileSync(
+    new URL("../app/api/translate/route.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    route,
+    /mode:\s*direction === "to_plain"\s*\?\s*`to_plain:\$\{plainMode\}`\s*:\s*`to_zhouli:\$\{mode\}`/,
+  );
 });
 
 test("feedback UI uses the full serif font without per-character fallback", () => {

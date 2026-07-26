@@ -19,15 +19,47 @@ const releaseChannel =
   process.env.NEXT_PUBLIC_RELEASE_CHANNEL === "preview" ? "preview" : "production";
 const clientVersion = `${clientSurface === "bilibili_toy" ? "toy" : "web"}-2026.07.27`;
 
-const negativeReasons: Array<{ id: NegativeReason; label: string }> = [
-  { id: "meaning_drift", label: "偏离原意" },
-  { id: "not_zhouli_enough", label: "不够周礼" },
-  { id: "forced_allusions", label: "生硬堆典故" },
-  { id: "illogical", label: "逻辑不通" },
-  { id: "repetitive", label: "套路重复" },
-  { id: "too_long", label: "太长" },
-  { id: "other", label: "其他" },
-];
+const feedbackConfigs: Record<
+  ZhouliDirection,
+  {
+    positiveLabel: string;
+    negativeLabel: string;
+    question: string;
+    otherPlaceholder: string;
+    reasons: Array<{ id: NegativeReason; label: string }>;
+  }
+> = {
+  to_zhouli: {
+    positiveLabel: "👍 合乎周礼",
+    negativeLabel: "👎 不够周礼",
+    question: "哪里还可以再议？可多选。",
+    otherPlaceholder: "请具体说明哪里不合适",
+    reasons: [
+      { id: "meaning_drift", label: "偏离原意" },
+      { id: "not_zhouli_enough", label: "不够周礼" },
+      { id: "forced_allusions", label: "生硬堆典故" },
+      { id: "illogical", label: "逻辑不通" },
+      { id: "repetitive", label: "套路重复" },
+      { id: "too_long", label: "太长" },
+      { id: "other", label: "其他" },
+    ],
+  },
+  to_plain: {
+    positiveLabel: "👍 释得明白",
+    negativeLabel: "👎 释得不准",
+    question: "哪里没有释明？可多选。",
+    otherPlaceholder: "请具体说明哪里释得不准",
+    reasons: [
+      { id: "meaning_drift", label: "误解原意" },
+      { id: "unclear_explanation", label: "还是没说清" },
+      { id: "unnatural_plain", label: "不像日常人话" },
+      { id: "missed_subtext", label: "漏掉潜台词" },
+      { id: "overinterpreted", label: "过度解读" },
+      { id: "too_long", label: "太啰嗦" },
+      { id: "other", label: "其他" },
+    ],
+  },
+};
 
 const directions: Array<{
   id: ZhouliDirection;
@@ -465,6 +497,7 @@ export default function Home() {
   const activeLoadingLines = isPlainDirection ? plainLoadingLines : loadingLines;
   const activeLevels = isPlainDirection ? plainLevels : levels;
   const activeDirectionVerb = isPlainDirection ? "释礼" : "问礼";
+  const activeFeedback = feedbackConfigs[direction];
 
   function syncInputText(value: string) {
     setText(value.slice(0, inputLimit));
@@ -1477,7 +1510,7 @@ export default function Home() {
                       ) : (
                         <>
                           <button type="button" onClick={() => void submitFeedback([])}>
-                            👍 合乎周礼
+                            {activeFeedback.positiveLabel}
                           </button>
                           <button
                             type="button"
@@ -1486,16 +1519,16 @@ export default function Home() {
                               setFeedbackMessage("");
                             }}
                           >
-                            👎 不够周礼
+                            {activeFeedback.negativeLabel}
                           </button>
                         </>
                       )}
                     </div>
                     {showNegativeReasons && !feedbackSubmitted && (
                       <div className="negative-reasons">
-                        <p>哪里还可以再议？可多选。</p>
+                        <p>{activeFeedback.question}</p>
                         <div>
-                          {negativeReasons.map((reason) => (
+                          {activeFeedback.reasons.map((reason) => (
                             <label key={reason.id}>
                               <input
                                 type="checkbox"
@@ -1520,7 +1553,7 @@ export default function Home() {
                             value={feedbackOtherReason}
                             maxLength={300}
                             aria-label="其他反馈说明"
-                            placeholder="请具体说明哪里不合适"
+                            placeholder={activeFeedback.otherPlaceholder}
                             onChange={(event) => setFeedbackOtherReason(event.target.value)}
                           />
                         )}

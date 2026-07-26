@@ -69,7 +69,7 @@ type GenerationState = {
   createdAt: number;
   startedAt: number;
   meta: AnalyticsMeta;
-  mode: ZhouliMode;
+  mode: `to_plain:${PlainMode}` | `to_zhouli:${ZhouliMode}`;
   inputChars: number;
   variant: PromptVariant;
   promptVersion: string;
@@ -814,7 +814,10 @@ export async function POST(request: NextRequest) {
     createdAt,
     startedAt,
     meta: analyticsMeta,
-    mode,
+    mode:
+      direction === "to_plain"
+        ? `to_plain:${plainMode}`
+        : `to_zhouli:${mode}`,
     inputChars: Array.from(text).length,
     variant,
     promptVersion,

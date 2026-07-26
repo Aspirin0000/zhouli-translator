@@ -18,6 +18,10 @@ export const NEGATIVE_REASONS = [
   "illogical",
   "repetitive",
   "too_long",
+  "unclear_explanation",
+  "unnatural_plain",
+  "missed_subtext",
+  "overinterpreted",
   "other",
 ] as const;
 

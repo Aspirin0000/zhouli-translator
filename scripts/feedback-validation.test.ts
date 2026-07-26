@@ -46,6 +46,24 @@ test("event validation accepts allowed interactions and structured reasons", () 
     })?.reasonDetail,
     "释礼虽然准确，但读起来还是有些绕。",
   );
+  assert.deepEqual(
+    validateEventPayload({
+      ...base,
+      event_type: "feedback_negative",
+      reasons: [
+        "unclear_explanation",
+        "unnatural_plain",
+        "missed_subtext",
+        "overinterpreted",
+      ],
+    })?.reasons,
+    [
+      "unclear_explanation",
+      "unnatural_plain",
+      "missed_subtext",
+      "overinterpreted",
+    ],
+  );
 });
 
 test("event validation rejects malformed or oversized payloads", () => {
