@@ -110,3 +110,8 @@ test("feedback UI sends custom detail for the other reason", () => {
   assert.match(page, /reason_detail/);
   assert.match(page, /placeholder=.*具体说明/);
 });
+
+test("feedback success renders one thank-you message", () => {
+  const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.equal(page.match(/感谢反馈，礼官已记下。/g)?.length, 1);
+});

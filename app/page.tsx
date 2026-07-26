@@ -738,7 +738,7 @@ export default function Home() {
     if (accepted) {
       setFeedbackSubmitted(true);
       setShowNegativeReasons(false);
-      setFeedbackMessage("感谢反馈，礼官已记下。");
+      setFeedbackMessage("");
     } else {
       setFeedbackMessage("反馈未能送达，但不影响继续使用。");
     }
