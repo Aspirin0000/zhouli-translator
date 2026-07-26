@@ -1131,6 +1131,176 @@ main {
   width: 15px;
 }
 
+.feedback-block {
+  padding: 13px 0 0;
+  position: relative;
+  z-index: 1;
+}
+
+.feedback-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.feedback-actions button,
+.case-submit-link,
+.case-consent button,
+.negative-reasons > button {
+  min-height: 32px;
+  padding: 0 10px;
+  color: rgba(242, 231, 211, 0.58);
+  background: transparent;
+  border: 1px solid rgba(239, 220, 188, 0.15);
+  cursor: pointer;
+  font: 500 10px/1.4 var(--sans);
+}
+
+.feedback-actions button:hover,
+.case-submit-link:hover,
+.case-consent button:hover:not(:disabled),
+.negative-reasons > button:hover:not(:disabled) {
+  color: #f7e9ce;
+  border-color: rgba(239, 220, 188, 0.42);
+}
+
+.feedback-thanks,
+.feedback-message {
+  color: rgba(226, 163, 143, 0.76);
+  font: 400 11px/1.6 var(--serif);
+}
+
+.negative-reasons,
+.case-consent {
+  margin-top: 10px;
+  padding: 12px;
+  color: rgba(242, 231, 211, 0.68);
+  border: 1px solid rgba(239, 220, 188, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.negative-reasons p,
+.case-consent p {
+  margin: 0 0 9px;
+  font: 400 11px/1.7 var(--serif);
+}
+
+.negative-reasons > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 11px;
+  margin-bottom: 11px;
+}
+
+.negative-reasons textarea {
+  display: block;
+  width: 100%;
+  min-height: 62px;
+  margin: 0 0 11px;
+  padding: 8px 9px;
+  box-sizing: border-box;
+  resize: vertical;
+  color: rgba(242, 231, 211, 0.78);
+  background: rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(239, 220, 188, 0.18);
+  outline: none;
+  font: 400 11px/1.6 var(--serif);
+}
+
+.negative-reasons textarea:focus {
+  border-color: rgba(226, 163, 143, 0.62);
+}
+
+.negative-reasons label,
+.case-consent label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: rgba(242, 231, 211, 0.66);
+  font: 400 10px/1.5 var(--sans);
+}
+
+.negative-reasons input,
+.case-consent input {
+  accent-color: var(--red-soft);
+}
+
+.negative-reasons > button:disabled,
+.case-consent button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.case-submit-link {
+  margin-top: 9px;
+  padding-inline: 0;
+  color: rgba(226, 163, 143, 0.76);
+  border: 0;
+}
+
+.case-consent strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #f1d9b5;
+  font: 600 13px/1.3 var(--serif);
+}
+
+.case-consent > label {
+  margin: 10px 0;
+}
+
+.case-consent > div {
+  display: flex;
+  gap: 8px;
+}
+
+.privacy-notice {
+  margin-top: 14px;
+  padding: 13px 14px;
+  color: rgba(242, 231, 211, 0.66);
+  border: 1px solid rgba(239, 220, 188, 0.18);
+  background: rgba(255, 255, 255, 0.035);
+  position: relative;
+  z-index: 1;
+}
+
+.privacy-notice strong {
+  color: #f1d9b5;
+  font: 600 12px/1.3 var(--serif);
+}
+
+.privacy-notice p {
+  margin: 7px 0 9px;
+  font: 400 10px/1.8 var(--serif);
+}
+
+.privacy-notice > div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.privacy-notice a,
+.privacy-notice button,
+.privacy-inline a {
+  color: rgba(226, 163, 143, 0.78);
+  font: 500 10px/1.4 var(--sans);
+}
+
+.privacy-notice button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.privacy-inline {
+  margin: 10px 0 0;
+  color: rgba(242, 231, 211, 0.3);
+  font: 400 9px/1.5 var(--sans);
+  position: relative;
+  z-index: 1;
+}
+
 .result-meta {
   display: flex;
   justify-content: space-between;
@@ -1162,6 +1332,62 @@ main {
 .result-support a:hover {
   color: #f1b39d;
   border-color: rgba(241, 179, 157, 0.62);
+}
+
+.privacy-page {
+  min-height: 100vh;
+  padding: 70px 24px 100px;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.privacy-page-inner {
+  width: min(760px, 100%);
+  margin: 0 auto;
+}
+
+.privacy-back {
+  display: inline-block;
+  margin-bottom: 70px;
+  color: var(--red);
+  font: 500 13px/1.4 var(--sans);
+}
+
+.privacy-page h1 {
+  margin: 18px 0 22px;
+  font: 600 clamp(38px, 6vw, 66px)/1.15 var(--serif);
+}
+
+.privacy-lead,
+.privacy-page section p {
+  color: var(--ink-soft);
+  font: 400 16px/2 var(--serif);
+}
+
+.privacy-lead {
+  margin: 0 0 65px;
+  padding-bottom: 35px;
+  border-bottom: 1px solid var(--line);
+}
+
+.privacy-page section {
+  padding: 0 0 34px;
+}
+
+.privacy-page h2 {
+  margin: 0 0 10px;
+  color: var(--red-deep);
+  font: 600 24px/1.3 var(--serif);
+}
+
+.privacy-page section p {
+  margin: 0;
+}
+
+.privacy-page a:not(.privacy-back) {
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .skill-section {
@@ -2186,6 +2412,20 @@ footer > span,
     flex: 1;
     justify-content: center;
     white-space: nowrap;
+  }
+
+  .feedback-actions {
+    flex-wrap: wrap;
+  }
+
+  .feedback-actions button {
+    min-height: 38px;
+    flex: 1;
+  }
+
+  .negative-reasons > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 
   .result-meta {

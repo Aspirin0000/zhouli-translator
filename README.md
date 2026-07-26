@@ -49,7 +49,9 @@ Skill 发布处。
 
 - Next.js 网站源码。
 - `/api/translate` 服务端生成接口。
+- `/api/event` 匿名交互反馈接口与 `/api/case` 主动授权案例接口。
 - DeepSeek Chat Completions 调用逻辑。
+- 官网与 B 站 Toy 共用的 Cloudflare Worker + D1 统计闭环。
 - 问礼与释礼提示词构造与清洗规则。
 - 可复制、可下载的 `speak-zhouli` Skill 包。
 - 礼帖/释帖图片生成与下载逻辑。
@@ -67,6 +69,8 @@ Skill 发布处。
 | 演示模式 | 没有 API Key 时仍可预览界面与交互 |
 | Skill 分发 | 支持一键复制 Skill 全文和 ZIP 下载 |
 | 图片导出 | 将问礼结果保存为礼帖，将释礼结果保存为释帖 |
+| 匿名反馈 | 记录运行指标、复制/再生成和正负反馈，不默认保存输入输出 |
+| 提示词实验 | A/B 只比较提示词版本，可按配置关闭 |
 | 公开前审计 | 内置脚本扫描明显密钥与私钥块 |
 
 ## Star History
@@ -140,10 +144,18 @@ does not call DeepSeek.
 ```text
 app/
   api/translate/route.ts       Server-side generation endpoint
+  api/event/route.ts            Anonymous interaction endpoint
+  api/case/route.ts             Explicitly authorized case submission
+  privacy/page.tsx              Privacy and anonymous analytics notice
   page.tsx                     Main UI and card export flow
 lib/
   prompt.ts                    问礼/释礼 prompt assembly and perspective rules
+  analytics*.ts                Client allowlists, D1 writes, and runtime bindings
+  feedback-*.ts                HMAC token and payload validation
   cardDownload.ts              Unique card download filenames
+migrations/
+  0001_create_analytics.sql    D1 schema for metrics, interactions, and cases
+analytics/queries/              Read-only reporting and retention SQL
 public/
   downloads/                   Public Skill assets
   images/                      README and website images
@@ -159,12 +171,14 @@ skill-package/
 
 The production generation path:
 
-1. The browser submits text, direction, mode, plainMode, level, and a client id to `/api/translate`.
-2. The server validates input length, direction, mode, plainMode, and level.
+1. The browser submits text, direction, mode, plainMode, level, and a bounded client surface marker to `/api/translate`.
+2. The server validates input length, direction, mode, plainMode, level, surface, and release channel.
 3. A lightweight in-memory rate limiter checks the request.
-4. The server builds a direction-specific system prompt plus a user prompt.
-5. DeepSeek returns a candidate response.
-6. The server cleans common failure patterns and strips plain-output preambles before returning JSON.
+4. The server chooses prompt A/B only when the experiment flag is enabled, then builds a direction-specific prompt.
+5. DeepSeek returns a candidate response; the Worker returns a random `response_id` and signed feedback token.
+6. Aggregate generation metrics are written to D1 in the background. A D1 failure never blocks the result.
+7. `/api/event` verifies the token and records copy, regenerate, and one quality feedback event per result.
+8. `/api/case` stores input/output only after explicit consent, with a 60-day retention deadline.
 
 The request shape keeps `direction, plainMode` explicit so the browser can switch
 between 问礼 and 释礼 without adding a second endpoint.
@@ -176,6 +190,10 @@ Default runtime choices:
 - User input limit: 300 Chinese characters for 问礼, 900 Chinese characters for 释礼.
 - Output limit: configured by `MAX_OUTPUT_TOKENS`.
 - API Key scope: server only, never sent to the browser.
+
+Analytics is off by default in local configuration. Production enables it only after the D1 migration and
+`RESPONSE_FEEDBACK_SECRET` are configured. The full data boundary is documented at
+[`/privacy`](https://hehuzhouli.com/privacy), and executable queries live under `analytics/queries/`.
 
 For multi-instance production deployments, replace the in-memory rate limiter
 with shared storage such as Redis, Upstash, D1, or KV, and configure platform
@@ -245,8 +263,13 @@ recommended Cloudflare path.
 npm install
 npx wrangler login
 npx wrangler secret put DEEPSEEK_API_KEY
+npx wrangler secret put RESPONSE_FEEDBACK_SECRET
+npx wrangler d1 migrations apply zhouli-analytics --remote
 npm run deploy
 ```
+
+The public website and B 站 Toy are two clients of the same Worker. The generated Toy package,
+local Toy adapter, and publishing credentials are intentionally excluded from the public source release.
 
 Local Workers preview:
 

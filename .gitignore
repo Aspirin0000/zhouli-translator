@@ -2,6 +2,7 @@ node_modules
 .next
 .open-next
 .wrangler
+cloudflare-env.d.ts
 out
 .env
 .env.local
@@ -13,3 +14,11 @@ yarn-error.log*
 .DS_Store
 *.tsbuildinfo
 test-runs/
+toy/
+.superpowers/
+docs/superpowers/
+scripts/build-toy-package.mjs
+scripts/toy-adapter.test.ts
+scripts/build-meme-stress-sample.mjs
+scripts/deepseek-roundtrip-500.mjs
+scripts/deepseek-roundtrip-rejudge.mjs

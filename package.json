@@ -19,6 +19,7 @@
     "test": "node --test scripts/*.test.ts",
     "typecheck": "tsc --noEmit",
     "star-history": "node scripts/build-star-history.mjs",
+    "analytics:cleanup": "node scripts/delete-expired-cases.mjs",
     "public:audit": "node scripts/public-audit.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",

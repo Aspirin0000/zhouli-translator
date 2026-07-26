@@ -1,13 +1,8 @@
-# DeepSeek API Key，只能放在服务端环境变量中。
+# 本地 Wrangler/Cloudflare Worker 开发变量。
+# 复制为 .dev.vars 后填写，不要提交 .dev.vars。
 DEEPSEEK_API_KEY=sk-your-key-here
-
-# 推荐使用经济、快速的 Flash 模型。
 DEEPSEEK_MODEL=deepseek-v4-flash
-
-# 可选：公开部署时用于控制单次输出上限。
 MAX_OUTPUT_TOKENS=720
-
-# 匿名统计与反馈功能默认关闭；生产环境在迁移完成后再开启。
 ANALYTICS_ENABLED=false
 FEEDBACK_UI_ENABLED=false
 CASE_SUBMISSION_ENABLED=false
@@ -15,6 +10,4 @@ AB_TEST_ENABLED=false
 AB_TEST_B_PERCENT=50
 PROMPT_VERSION_A=zhouli-v1
 PROMPT_VERSION_B=zhouli-v2
-
-# 仅服务端使用。不要写入前端环境变量或 Git。
 RESPONSE_FEEDBACK_SECRET=replace-with-a-random-server-secret

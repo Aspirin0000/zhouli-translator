@@ -1,9 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import {
-  buildPlainPrompt,
-  buildUserPrompt,
-  PLAIN_SYSTEM_PROMPT,
-  SYSTEM_PROMPT,
+  getAnalyticsConfig,
+  parseAnalyticsMeta,
+  parseExperimentBucket,
+  type AnalyticsConfig,
+  type AnalyticsMeta,
+} from "@/lib/analytics";
+import {
+  recordGenerationSafely,
+  type GenerationRecord,
+} from "@/lib/analytics-store";
+import { getAnalyticsRuntime, runInBackground } from "@/lib/analytics-runtime";
+import { corsJson, getCorsHeaders } from "@/lib/cors";
+import { createResponseId, signFeedbackToken } from "@/lib/feedback-token";
+import {
   type PlainMode,
   type ZhouliDirection,
   type ZhouliLevel,
@@ -14,6 +24,11 @@ import {
   looksLikePromptHijackResult,
   promptInjectionResult,
 } from "@/lib/prompt-security";
+import {
+  getPromptSet,
+  selectExperimentVariant,
+  type PromptVariant,
+} from "@/lib/prompt-variants";
 
 export const runtime = "nodejs";
 
@@ -49,43 +64,74 @@ const globalForRateLimit = globalThis as typeof globalThis & {
 const rateLimit = globalForRateLimit.zhouliRateLimit ?? new Map();
 globalForRateLimit.zhouliRateLimit = rateLimit;
 
-const CORS_ORIGINS = new Set([
-  "https://www.bilibili.com",
-  "https://bilibili.com",
-  "https://www.bebox.net",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:4173",
-  "http://127.0.0.1:4173",
-]);
+type GenerationState = {
+  responseId: string;
+  createdAt: number;
+  startedAt: number;
+  meta: AnalyticsMeta;
+  mode: ZhouliMode;
+  inputChars: number;
+  variant: PromptVariant;
+  promptVersion: string;
+  feedbackToken: string;
+};
 
-function getCorsHeaders(request: NextRequest) {
-  const headers = new Headers({
-    Vary: "Origin",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, x-client-id",
-  });
-  const origin = request.headers.get("origin");
-
-  if (origin && CORS_ORIGINS.has(origin)) {
-    headers.set("Access-Control-Allow-Origin", origin);
-  }
-
-  return headers;
+function usageNumber(usage: unknown, key: string) {
+  if (!usage || typeof usage !== "object") return null;
+  const value = (usage as Record<string, unknown>)[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-function corsJson(
+async function generationJson(
   request: NextRequest,
-  body: unknown,
-  init?: ResponseInit,
+  runtime: Awaited<ReturnType<typeof getAnalyticsRuntime>>,
+  analyticsConfig: AnalyticsConfig,
+  state: GenerationState,
+  body: Record<string, unknown>,
+  options: ResponseInit & {
+    success?: boolean;
+    errorClass?: string | null;
+  } = {},
 ) {
-  const headers = getCorsHeaders(request);
-  new Headers(init?.headers).forEach((value, key) => headers.set(key, value));
-  return NextResponse.json(body, { ...init, headers });
+  const { success = true, errorClass = null, ...responseInit } = options;
+  const outputText = typeof body.result === "string" ? body.result : null;
+  const model = typeof body.model === "string" ? body.model : "unknown";
+  const record: GenerationRecord = {
+    responseId: state.responseId,
+    createdAt: state.createdAt,
+    ...state.meta,
+    mode: state.mode,
+    promptVersion: state.promptVersion,
+    experimentVariant: state.variant,
+    model,
+    success,
+    latencyMs: Math.max(0, Date.now() - state.startedAt),
+    inputChars: state.inputChars,
+    outputChars: outputText ? Array.from(outputText).length : null,
+    inputTokens: usageNumber(body.usage, "prompt_tokens"),
+    outputTokens: usageNumber(body.usage, "completion_tokens"),
+    errorClass,
+  };
+
+  if (analyticsConfig.analyticsEnabled && runtime.db) {
+    runInBackground(recordGenerationSafely(runtime.db, record), runtime.waitUntil);
+  }
+
+  return corsJson(
+    request,
+    {
+      response_id: state.responseId,
+      variant: state.variant,
+      prompt_version: state.promptVersion,
+      ...(state.feedbackToken ? { feedback_token: state.feedbackToken } : {}),
+      ...body,
+    },
+    responseInit,
+  );
 }
 
 export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, { status: 204, headers: getCorsHeaders(request) });
+  return new Response(null, { status: 204, headers: getCorsHeaders(request) });
 }
 
 function getClientKey(request: NextRequest) {
@@ -671,6 +717,10 @@ export async function POST(request: NextRequest) {
     level?: unknown;
     direction?: unknown;
     plainMode?: unknown;
+    surface?: unknown;
+    client_version?: unknown;
+    release_channel?: unknown;
+    experiment_bucket?: unknown;
   };
 
   try {
@@ -682,6 +732,14 @@ export async function POST(request: NextRequest) {
   const direction = VALID_DIRECTIONS.has(body.direction as ZhouliDirection)
     ? (body.direction as ZhouliDirection)
     : "to_zhouli";
+  const analyticsMeta = parseAnalyticsMeta(body);
+  if (!analyticsMeta) {
+    return corsJson(
+      request,
+      { error: "客户端标识无效，请刷新页面后再试。" },
+      { status: 400 },
+    );
+  }
   const key = getClientKey(request);
   const rate = checkRateLimit(key);
 
@@ -733,8 +791,38 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const runtime = await getAnalyticsRuntime();
+  const analyticsConfig = getAnalyticsConfig(runtime.environment);
+  const requestedBucket = parseExperimentBucket(body.experiment_bucket);
+  const experimentBucket =
+    requestedBucket ??
+    (analyticsConfig.abTestEnabled ? Math.floor(Math.random() * 100) : undefined);
+  const variant = selectExperimentVariant(analyticsConfig, experimentBucket);
+  const promptVersion =
+    variant === "B"
+      ? analyticsConfig.promptVersionB
+      : analyticsConfig.promptVersionA;
+  const responseId = createResponseId();
+  const createdAt = Date.now();
+  const startedAt = createdAt;
+  const feedbackToken =
+    analyticsConfig.analyticsEnabled && runtime.feedbackSecret
+      ? await signFeedbackToken(runtime.feedbackSecret, responseId, analyticsMeta.surface)
+      : "";
+  const generation: GenerationState = {
+    responseId,
+    createdAt,
+    startedAt,
+    meta: analyticsMeta,
+    mode,
+    inputChars: Array.from(text).length,
+    variant,
+    promptVersion,
+    feedbackToken,
+  };
+
   if (isPromptInjectionAttempt(text)) {
-    return corsJson(request, {
+    return generationJson(request, runtime, analyticsConfig, generation, {
       result: promptInjectionResult(text, direction, level),
       model: "礼官守令",
       demo: false,
@@ -749,7 +837,7 @@ export async function POST(request: NextRequest) {
 
   const shortPlainResult = direction === "to_plain" ? getShortPlainResult(text) : "";
   if (shortPlainResult) {
-    return corsJson(request, {
+    return generationJson(request, runtime, analyticsConfig, generation, {
       result: shortPlainResult,
       model: "礼官速释",
       demo: false,
@@ -762,7 +850,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (isCyberAuditRequest(text)) {
-    return corsJson(request, {
+    return generationJson(request, runtime, analyticsConfig, generation, {
       result: cyberAuditResult(level),
       model: "礼官校订",
       demo: false,
@@ -776,7 +864,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (isQuotedThreatEvaluationInput(text)) {
-    return corsJson(request, {
+    return generationJson(request, runtime, analyticsConfig, generation, {
       result: quotedThreatEvaluationResult(level),
       model: "礼官校订",
       demo: false,
@@ -791,7 +879,7 @@ export async function POST(request: NextRequest) {
 
   const safetyBlockKind = getSafetyBlockKind(text);
   if (safetyBlockKind) {
-    return corsJson(request, {
+    return generationJson(request, runtime, analyticsConfig, generation, {
       result: safetyBlockResult(safetyBlockKind),
       model: "礼官守门",
       demo: false,
@@ -805,7 +893,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (isDirectedSecondPersonAttackInput(text)) {
-    return corsJson(request, {
+    return generationJson(request, runtime, analyticsConfig, generation, {
       result: directedAttackFallback(text, level),
       model: "礼官校订",
       demo: false,
@@ -817,10 +905,14 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const apiKey = process.env.DEEPSEEK_API_KEY;
+  const apiKey =
+    process.env.DEEPSEEK_API_KEY ||
+    (typeof runtime.environment.DEEPSEEK_API_KEY === "string"
+      ? runtime.environment.DEEPSEEK_API_KEY
+      : "");
 
   if (!apiKey) {
-    return corsJson(request, {
+    return generationJson(request, runtime, analyticsConfig, generation, {
       result:
         direction === "to_plain"
           ? demoPlainResult(text, level, plainMode)
@@ -836,23 +928,34 @@ export async function POST(request: NextRequest) {
 
   try {
     const isPlainDirection = direction === "to_plain";
+    const promptSet = getPromptSet(direction, variant, analyticsConfig, {
+      text,
+      mode,
+      level,
+      plainMode,
+    });
+    generation.promptVersion = promptSet.promptVersion;
     const requestBody = {
-      model: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
+      model:
+        (typeof runtime.environment.DEEPSEEK_MODEL === "string"
+          ? runtime.environment.DEEPSEEK_MODEL
+          : process.env.DEEPSEEK_MODEL) || "deepseek-v4-flash",
       messages: [
         {
           role: "system",
-          content: isPlainDirection ? PLAIN_SYSTEM_PROMPT : SYSTEM_PROMPT,
+          content: promptSet.systemPrompt,
         },
         {
           role: "user",
-          content: isPlainDirection
-            ? buildPlainPrompt(text, level, plainMode)
-            : buildUserPrompt(text, mode, level),
+          content: promptSet.userPrompt,
         },
       ],
       max_tokens: isPlainDirection
-        ? Math.min(Number(process.env.MAX_OUTPUT_TOKENS || 720), 520)
-        : Number(process.env.MAX_OUTPUT_TOKENS || 720),
+        ? Math.min(
+            Number(runtime.environment.MAX_OUTPUT_TOKENS || process.env.MAX_OUTPUT_TOKENS || 720),
+            520,
+          )
+        : Number(runtime.environment.MAX_OUTPUT_TOKENS || process.env.MAX_OUTPUT_TOKENS || 720),
       temperature: isPlainDirection ? 0.18 : 0.68,
       stream: false,
       thinking: { type: "disabled" },
@@ -872,10 +975,10 @@ export async function POST(request: NextRequest) {
       data = await response.json();
 
       if (!response.ok) {
-        console.error("DeepSeek API error:", data);
-        return corsJson(request,
+        console.error("DeepSeek API error status:", response.status);
+        return generationJson(request, runtime, analyticsConfig, generation,
           { error: "大儒暂未回应，请稍后再试。" },
-          { status: 502 },
+          { status: 502, success: false, errorClass: "provider_error" },
         );
       }
 
@@ -923,7 +1026,7 @@ export async function POST(request: NextRequest) {
         );
 
     if (looksLikePromptHijackResult(text, result)) {
-      return corsJson(request, {
+      return generationJson(request, runtime, analyticsConfig, generation, {
         result: promptInjectionResult(text, direction, level),
         model: "礼官守令",
         demo: false,
@@ -947,15 +1050,15 @@ export async function POST(request: NextRequest) {
             : 40,
       )
     ) {
-      return corsJson(request,
+      return generationJson(request, runtime, analyticsConfig, generation,
         { error: "此言尚未成礼，请再试一次。" },
-        { status: 502 },
+        { status: 502, success: false, errorClass: "incomplete_result" },
       );
     }
 
-    return corsJson(request, {
+    return generationJson(request, runtime, analyticsConfig, generation, {
       result,
-      model: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
+      model: requestBody.model,
       demo: false,
       usage: data.usage,
       remaining: rate.remaining,
@@ -965,9 +1068,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Translate request failed:", error);
-    return corsJson(request,
+    return generationJson(request, runtime, analyticsConfig, generation,
       { error: "礼官远行未归，请稍后再试。" },
-      { status: 502 },
+      { status: 502, success: false, errorClass: "request_failed" },
     );
   }
 }

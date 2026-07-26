@@ -10,6 +10,7 @@ Safe to publish:
 - Next.js app source code.
 - DeepSeek API integration code.
 - Prompt construction logic.
+- Anonymous analytics schema and feedback protocol, without production data.
 - The downloadable `speak-zhouli` Skill package.
 - Public images and static download files.
 - README, license, and example environment variables.
@@ -21,6 +22,7 @@ Do not commit or publish:
 - Private test logs under `test-runs/`.
 - Local build output such as `.next/`, `.open-next/`, `.wrangler/`, and `node_modules/`.
 - Production-only WAF, billing, alerting, or abuse-response notes.
+- Generated B 站 Toy package, local Toy preview output, or Toy publishing credentials.
 
 ## Pre-Public Checklist
 

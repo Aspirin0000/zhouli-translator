@@ -9,6 +9,25 @@ import type {
   ZhouliLevel,
   ZhouliMode,
 } from "@/lib/prompt";
+import type { ClientSurface, EventType, NegativeReason } from "@/lib/analytics";
+
+const clientSurface: ClientSurface =
+  process.env.NEXT_PUBLIC_CLIENT_SURFACE === "bilibili_toy"
+    ? "bilibili_toy"
+    : "web";
+const releaseChannel =
+  process.env.NEXT_PUBLIC_RELEASE_CHANNEL === "preview" ? "preview" : "production";
+const clientVersion = `${clientSurface === "bilibili_toy" ? "toy" : "web"}-2026.07.27`;
+
+const negativeReasons: Array<{ id: NegativeReason; label: string }> = [
+  { id: "meaning_drift", label: "偏离原意" },
+  { id: "not_zhouli_enough", label: "不够周礼" },
+  { id: "forced_allusions", label: "生硬堆典故" },
+  { id: "illogical", label: "逻辑不通" },
+  { id: "repetitive", label: "套路重复" },
+  { id: "too_long", label: "太长" },
+  { id: "other", label: "其他" },
+];
 
 const directions: Array<{
   id: ZhouliDirection;
@@ -320,6 +339,10 @@ async function fetchTranslateWithRetry(
     plainMode: PlainMode;
     level: ZhouliLevel;
     direction: ZhouliDirection;
+    surface: ClientSurface;
+    client_version: string;
+    release_channel: "production" | "preview";
+    experiment_bucket?: number;
   },
   clientId: string,
 ) {
@@ -352,6 +375,42 @@ async function fetchTranslateWithRetry(
   throw lastError;
 }
 
+function getExperimentBucket() {
+  const storageKey = `zhouli-experiment-bucket-${clientSurface}`;
+  try {
+    const existing = Number(window.localStorage.getItem(storageKey));
+    if (Number.isInteger(existing) && existing >= 0 && existing <= 99) {
+      return existing;
+    }
+  } catch {
+    // Embedded browsers may not expose persistent storage.
+  }
+
+  const bucket = Math.floor(Math.random() * 100);
+  try {
+    window.localStorage.setItem(storageKey, String(bucket));
+  } catch {
+    // A per-page bucket is acceptable when persistence is unavailable.
+  }
+  return bucket;
+}
+
+function hasSeenPrivacyNotice() {
+  try {
+    return window.localStorage.getItem("zhouli-privacy-notice-seen") === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markPrivacyNoticeSeen() {
+  try {
+    window.localStorage.setItem("zhouli-privacy-notice-seen", "1");
+  } catch {
+    // The notice can be dismissed for this render even without persistence.
+  }
+}
+
 export default function Home() {
   const [direction, setDirection] = useState<ZhouliDirection>("to_zhouli");
   const [text, setText] = useState("");
@@ -371,6 +430,18 @@ export default function Home() {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [dailyRemaining, setDailyRemaining] = useState<number | null>(null);
   const [retryAfterSeconds, setRetryAfterSeconds] = useState<number | null>(null);
+  const [responseId, setResponseId] = useState("");
+  const [feedbackToken, setFeedbackToken] = useState("");
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [feedbackReasons, setFeedbackReasons] = useState<NegativeReason[]>([]);
+  const [feedbackOtherReason, setFeedbackOtherReason] = useState("");
+  const [showNegativeReasons, setShowNegativeReasons] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
+  const [showCaseConsent, setShowCaseConsent] = useState(false);
+  const [caseConsent, setCaseConsent] = useState(false);
+  const [caseMessage, setCaseMessage] = useState("");
+  const [sourceText, setSourceText] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const cardImageRef = useRef<HTMLImageElement | null>(null);
@@ -487,9 +558,60 @@ export default function Home() {
     );
   }
 
-  async function readJsonResponse(response: Response) {
+  async function sendInteraction(
+    eventType: EventType,
+    reasons: NegativeReason[] = [],
+    reasonDetail = "",
+  ) {
+    if (!responseId || !feedbackToken) return false;
+
     try {
-      return await response.json();
+      const response = await fetchWithTimeout(
+        "/api/event",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            response_id: responseId,
+            feedback_token: feedbackToken,
+            surface: clientSurface,
+            client_version: clientVersion,
+            release_channel: releaseChannel,
+            event_type: eventType,
+            ...(eventType === "feedback_negative" ? { reasons } : {}),
+            ...(eventType === "feedback_negative" && reasonDetail
+              ? { reason_detail: reasonDetail }
+              : {}),
+          }),
+        },
+        8_000,
+      );
+      const data = await readJsonResponse(response);
+      return response.ok && data.accepted === true;
+    } catch {
+      return false;
+    }
+  }
+
+  function resetFeedbackState() {
+    setResponseId("");
+    setFeedbackToken("");
+    setFeedbackSubmitted(false);
+    setFeedbackReasons([]);
+    setFeedbackOtherReason("");
+    setShowNegativeReasons(false);
+    setFeedbackMessage("");
+    setShowCaseConsent(false);
+    setCaseConsent(false);
+    setCaseMessage("");
+    setShowPrivacyNotice(false);
+    setSourceText("");
+  }
+
+  async function readJsonResponse(response: Response): Promise<Record<string, unknown>> {
+    try {
+      const value = await response.json();
+      return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
     } catch {
       return {};
     }
@@ -516,8 +638,9 @@ export default function Home() {
     return "礼官暂未回应，请稍后再试。";
   }
 
-  async function translate() {
+  async function translate(isRegenerate = false) {
     if (!text.trim() || loading) return;
+    if (isRegenerate) void sendInteraction("regenerate");
     setLoading(true);
     setLoadingIndex(0);
     setError("");
@@ -525,7 +648,17 @@ export default function Home() {
 
     try {
       const response = await fetchTranslateWithRetry(
-        { text: text.trim(), mode, plainMode, level, direction },
+        {
+          text: text.trim(),
+          mode,
+          plainMode,
+          level,
+          direction,
+          surface: clientSurface,
+          client_version: clientVersion,
+          release_channel: releaseChannel,
+          experiment_bucket: getExperimentBucket(),
+        },
         getClientId(),
       );
 
@@ -535,8 +668,25 @@ export default function Home() {
         throw new Error(getResponseErrorMessage(response, data));
       }
 
+      if (typeof data.result !== "string") {
+        throw new Error("礼官暂未给出成文，请稍后再试。");
+      }
       setResult(data.result);
       setIsDemo(Boolean(data.demo));
+      setResponseId(typeof data.response_id === "string" ? data.response_id : "");
+      setFeedbackToken(typeof data.feedback_token === "string" ? data.feedback_token : "");
+      setFeedbackSubmitted(false);
+      setFeedbackReasons([]);
+      setFeedbackOtherReason("");
+      setShowNegativeReasons(false);
+      setFeedbackMessage("");
+      setShowCaseConsent(false);
+      setCaseConsent(false);
+      setCaseMessage("");
+      setSourceText(text.trim());
+      if (typeof data.feedback_token === "string" && data.feedback_token && !hasSeenPrivacyNotice()) {
+        setShowPrivacyNotice(true);
+      }
       window.setTimeout(() => {
         resultRef.current?.scrollIntoView({
           behavior: "smooth",
@@ -559,8 +709,80 @@ export default function Home() {
   async function copyResult() {
     if (!result) return;
     if (await writeClipboard(result)) {
+      void sendInteraction("copy");
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1800);
+    }
+  }
+
+  async function submitFeedback(
+    nextReasons: NegativeReason[],
+    nextReasonDetail = feedbackOtherReason,
+  ) {
+    if (feedbackSubmitted) return;
+    const reasonDetail = nextReasonDetail.trim();
+    if (nextReasons.includes("other") && !reasonDetail) {
+      setFeedbackMessage("请补充选择“其他”的具体原因。");
+      return;
+    }
+    if (!feedbackToken) {
+      setFeedbackMessage("匿名反馈接口尚未就绪，请稍后再试。");
+      return;
+    }
+    setFeedbackReasons(nextReasons);
+    setFeedbackOtherReason(reasonDetail);
+    const eventType: EventType = nextReasons.length
+      ? "feedback_negative"
+      : "feedback_positive";
+    const accepted = await sendInteraction(eventType, nextReasons, reasonDetail);
+    if (accepted) {
+      setFeedbackSubmitted(true);
+      setShowNegativeReasons(false);
+      setFeedbackMessage("感谢反馈，礼官已记下。");
+    } else {
+      setFeedbackMessage("反馈未能送达，但不影响继续使用。");
+    }
+  }
+
+  async function submitCase() {
+    if (!caseConsent || !responseId || !feedbackToken || !sourceText || !result) return;
+    setCaseMessage("");
+    try {
+      const response = await fetchWithTimeout(
+        "/api/case",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            response_id: responseId,
+            feedback_token: feedbackToken,
+            surface: clientSurface,
+            client_version: clientVersion,
+            release_channel: releaseChannel,
+            input_text: sourceText,
+            output_text: result,
+            feedback_reasons: feedbackReasons,
+            feedback_reason_detail: feedbackReasons.includes("other")
+              ? feedbackOtherReason
+              : undefined,
+            consent: true,
+            consent_version: "2026-07-27",
+            public_display_allowed: false,
+          }),
+        },
+        10_000,
+      );
+      const data = await readJsonResponse(response);
+      if (!response.ok || data.accepted !== true) {
+        throw new Error(typeof data.error === "string" ? data.error : "案例暂未收下。");
+      }
+      setCaseMessage("案例已匿名收下，感谢帮忙改进。");
+      setShowCaseConsent(false);
+      setCaseConsent(false);
+    } catch (requestError) {
+      setCaseMessage(
+        requestError instanceof Error ? requestError.message : "案例暂未收下，请稍后再试。",
+      );
     }
   }
 
@@ -1058,6 +1280,7 @@ export default function Home() {
                     setError("");
                     setCopied(false);
                     setIsDemo(false);
+                    resetFeedbackState();
                   }}
                 >
                   <strong>{item.title}</strong>
@@ -1183,7 +1406,7 @@ export default function Home() {
               className="translate-button"
               type="button"
               disabled={!text.trim() || loading}
-              onClick={translate}
+              onClick={() => void translate()}
             >
               <span className="button-decoration">◆</span>
               <span>
@@ -1238,11 +1461,143 @@ export default function Home() {
                     <Icon name="download" />
                     {isPlainDirection ? "生成释帖" : "生成礼帖"}
                   </button>
-                  <button type="button" onClick={translate}>
+                  <button type="button" onClick={() => translate(true)}>
                     <Icon name="refresh" />
                     {isPlainDirection ? "再释一次" : "再议一次"}
                   </button>
                 </div>
+                <div className="feedback-block">
+                    <div className="feedback-actions" aria-label="评价本次结果">
+                      {feedbackSubmitted ? (
+                        <span className="feedback-thanks">感谢反馈，礼官已记下。</span>
+                      ) : (
+                        <>
+                          <button type="button" onClick={() => void submitFeedback([])}>
+                            👍 合乎周礼
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowNegativeReasons(true);
+                              setFeedbackMessage("");
+                            }}
+                          >
+                            👎 不够周礼
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    {showNegativeReasons && !feedbackSubmitted && (
+                      <div className="negative-reasons">
+                        <p>哪里还可以再议？可多选。</p>
+                        <div>
+                          {negativeReasons.map((reason) => (
+                            <label key={reason.id}>
+                              <input
+                                type="checkbox"
+                                checked={feedbackReasons.includes(reason.id)}
+                                onChange={(event) => {
+                                  setFeedbackReasons((current) =>
+                                    event.target.checked
+                                      ? [...current, reason.id]
+                                      : current.filter((item) => item !== reason.id),
+                                  );
+                                  if (!event.target.checked && reason.id === "other") {
+                                    setFeedbackOtherReason("");
+                                  }
+                                }}
+                              />
+                              {reason.label}
+                            </label>
+                          ))}
+                        </div>
+                        {feedbackReasons.includes("other") && (
+                          <textarea
+                            value={feedbackOtherReason}
+                            maxLength={300}
+                            aria-label="其他反馈说明"
+                            placeholder="请具体说明哪里不合适"
+                            onChange={(event) => setFeedbackOtherReason(event.target.value)}
+                          />
+                        )}
+                        <button
+                          type="button"
+                          disabled={
+                            !feedbackReasons.length ||
+                            (feedbackReasons.includes("other") && !feedbackOtherReason.trim())
+                          }
+                          onClick={() => void submitFeedback(feedbackReasons, feedbackOtherReason)}
+                        >
+                          记下这条意见
+                        </button>
+                      </div>
+                    )}
+                    {feedbackSubmitted && feedbackReasons.length > 0 && !showCaseConsent && feedbackToken && (
+                      <button
+                        className="case-submit-link"
+                        type="button"
+                        onClick={() => {
+                          setCaseConsent(false);
+                          setCaseMessage("");
+                          setShowCaseConsent(true);
+                        }}
+                      >
+                        愿意提交本次输入和结果，帮助改进 →
+                      </button>
+                    )}
+                    {showCaseConsent && (
+                      <div className="case-consent" role="dialog" aria-label="提交匿名案例">
+                        <strong>提交匿名案例</strong>
+                        <p>
+                          将保存本次输入、AI 生成结果和反馈原因，用于改进生成效果；内容可能被人工查看，保存 60 天。
+                          未经再次授权，不会在视频、文章或公开页面展示。
+                        </p>
+                        <p>请不要提交姓名、手机号、住址、聊天隐私或其他敏感信息。</p>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={caseConsent}
+                            onChange={(event) => setCaseConsent(event.target.checked)}
+                          />
+                          我已阅读并同意匿名提交本次输入与生成结果
+                        </label>
+                        <div>
+                          <button type="button" onClick={() => setShowCaseConsent(false)}>
+                            取消
+                          </button>
+                          <button type="button" disabled={!caseConsent} onClick={() => void submitCase()}>
+                            确认提交
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {feedbackMessage && <p className="feedback-message">{feedbackMessage}</p>}
+                    {caseMessage && <p className="feedback-message">{caseMessage}</p>}
+                  </div>
+                {showPrivacyNotice && (
+                  <div className="privacy-notice" role="status">
+                    <strong>隐私与匿名统计说明</strong>
+                    <p>
+                      为改善生成效果，我们会匿名记录生成是否成功、响应时间、提示词版本，以及复制、重新生成和反馈等操作。
+                      默认不保存你的输入、生成结果、IP 地址或设备身份；只有你主动提交匿名案例时，才会保存本次输入和结果。
+                    </p>
+                    <div>
+                      <a href="/privacy">查看完整说明</a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          markPrivacyNoticeSeen();
+                          setShowPrivacyNotice(false);
+                        }}
+                      >
+                        知道了
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <p className="privacy-inline">
+                  <a href="/privacy">隐私与匿名统计说明</a> · 默认不保存输入和生成结果
+                </p>
                 <div className="result-meta">
                   <span>
                     {isDemo

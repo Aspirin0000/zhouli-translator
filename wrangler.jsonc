@@ -23,6 +23,14 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "d1_databases": [
+    {
+      "binding": "ANALYTICS_DB",
+      "database_name": "zhouli-analytics",
+      "database_id": "82c06753-d9f2-42bf-82db-91f820e72e84",
+      "migrations_dir": "./migrations"
+    }
+  ],
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
@@ -31,6 +39,13 @@
   ],
   "vars": {
     "DEEPSEEK_MODEL": "deepseek-v4-flash",
-    "MAX_OUTPUT_TOKENS": "720"
+    "MAX_OUTPUT_TOKENS": "720",
+    "ANALYTICS_ENABLED": "true",
+    "FEEDBACK_UI_ENABLED": "true",
+    "CASE_SUBMISSION_ENABLED": "true",
+    "AB_TEST_ENABLED": "false",
+    "AB_TEST_B_PERCENT": "50",
+    "PROMPT_VERSION_A": "zhouli-v1",
+    "PROMPT_VERSION_B": "zhouli-v2"
   }
 }
