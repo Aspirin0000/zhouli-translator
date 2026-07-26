@@ -1542,7 +1542,8 @@ export default function Home() {
                           setShowCaseConsent(true);
                         }}
                       >
-                        愿意提交本次输入和结果，帮助改进 →
+                        <span>愿意提交本次输入和结果，帮助改进</span>
+                        <Icon name="arrow" />
                       </button>
                     )}
                     {showCaseConsent && (

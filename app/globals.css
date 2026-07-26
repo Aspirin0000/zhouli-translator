@@ -1231,10 +1231,37 @@ main {
 }
 
 .case-submit-link {
-  margin-top: 9px;
-  padding-inline: 0;
-  color: rgba(226, 163, 143, 0.76);
-  border: 0;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 0 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  color: #efc3b5;
+  background: rgba(169, 61, 45, 0.14);
+  border: 1px solid rgba(218, 116, 91, 0.48);
+  text-align: left;
+  font: 500 11px/1.5 var(--serif);
+}
+
+.case-submit-link:hover {
+  color: #fff0dc;
+  background: rgba(169, 61, 45, 0.24);
+  border-color: rgba(226, 144, 120, 0.76);
+}
+
+.case-submit-link:focus-visible {
+  outline: 2px solid rgba(226, 144, 120, 0.72);
+  outline-offset: 2px;
+}
+
+.case-submit-link svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
 }
 
 .case-consent strong {

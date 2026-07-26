@@ -115,3 +115,16 @@ test("feedback success renders one thank-you message", () => {
   const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
   assert.equal(page.match(/感谢反馈，礼官已记下。/g)?.length, 1);
 });
+
+test("negative feedback exposes a prominent case submission action", () => {
+  const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+  const rule = styles.match(/\.case-submit-link\s*\{([\s\S]*?)\}/)?.[1] ?? "";
+
+  assert.match(page, /<span>愿意提交本次输入和结果，帮助改进<\/span>/);
+  assert.match(page, /<Icon name="arrow" \/>/);
+  assert.match(rule, /display:\s*flex/);
+  assert.match(rule, /width:\s*100%/);
+  assert.match(rule, /min-height:\s*44px/);
+  assert.match(rule, /justify-content:\s*space-between/);
+});
