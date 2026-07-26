@@ -1181,7 +1181,7 @@ main {
 .negative-reasons p,
 .case-consent p {
   margin: 0 0 9px;
-  font: 400 11px/1.7 var(--serif);
+  font: 400 11px/1.7 var(--serif-dynamic);
 }
 
 .negative-reasons > div {
@@ -1203,7 +1203,7 @@ main {
   background: rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(239, 220, 188, 0.18);
   outline: none;
-  font: 400 11px/1.6 var(--serif);
+  font: 400 11px/1.6 var(--serif-dynamic);
 }
 
 .negative-reasons textarea:focus {
@@ -1244,7 +1244,7 @@ main {
   background: rgba(169, 61, 45, 0.14);
   border: 1px solid rgba(218, 116, 91, 0.48);
   text-align: left;
-  font: 500 11px/1.5 var(--serif);
+  font: 500 11px/1.5 var(--serif-dynamic);
 }
 
 .case-submit-link:hover {
@@ -1268,7 +1268,7 @@ main {
   display: block;
   margin-bottom: 8px;
   color: #f1d9b5;
-  font: 600 13px/1.3 var(--serif);
+  font: 600 13px/1.3 var(--serif-dynamic);
 }
 
 .case-consent > label {

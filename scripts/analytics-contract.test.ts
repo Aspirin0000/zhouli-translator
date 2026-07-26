@@ -116,14 +116,21 @@ test("feedback success renders one thank-you message", () => {
   assert.equal(page.match(/感谢反馈，礼官已记下。/g)?.length, 1);
 });
 
-test("feedback status uses the full serif font without per-character fallback", () => {
+test("feedback UI uses the full serif font without per-character fallback", () => {
   const styles = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
-  const rule =
-    styles.match(
-      /\.feedback-thanks,\s*\.feedback-message\s*\{([\s\S]*?)\}/,
-    )?.[1] ?? "";
+  const selectors = [
+    /\.feedback-thanks,\s*\.feedback-message/,
+    /\.negative-reasons p,\s*\.case-consent p/,
+    /\.negative-reasons textarea/,
+    /\.case-submit-link/,
+    /\.case-consent strong/,
+  ];
 
-  assert.match(rule, /font:\s*400 11px\/1\.6 var\(--serif-dynamic\)/);
+  for (const selector of selectors) {
+    const rule = styles.match(new RegExp(`${selector.source}\\s*\\{([\\s\\S]*?)\\}`))?.[1] ?? "";
+    assert.match(rule, /var\(--serif-dynamic\)/, `${selector.source} must use the full font`);
+    assert.doesNotMatch(rule, /var\(--serif\)/, `${selector.source} must not use the UI subset`);
+  }
 });
 
 test("negative feedback exposes a prominent case submission action", () => {
