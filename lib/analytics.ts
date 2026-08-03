@@ -59,7 +59,7 @@ export const DEFAULT_ANALYTICS_CONFIG: AnalyticsConfig = {
   abTestEnabled: false,
   abTestBPercent: 0,
   promptVersionA: "zhouli-v1",
-  promptVersionB: "zhouli-v3",
+  promptVersionB: "zhouli-v2",
 };
 
 function includes<T extends string>(values: readonly T[], value: unknown): value is T {
