@@ -10,7 +10,7 @@
 ANALYTICS_ENABLED=true
 FEEDBACK_UI_ENABLED=true
 CASE_SUBMISSION_ENABLED=true
-AB_TEST_ENABLED=true
+AB_TEST_ENABLED=false
 AB_TEST_B_PERCENT=50
 PROMPT_VERSION_A=zhouli-v1
 PROMPT_VERSION_B=zhouli-v2
@@ -18,7 +18,7 @@ PROMPT_VERSION_B=zhouli-v2
 
 A/B 第一轮只改变提示词版本。关闭实验时把 `AB_TEST_ENABLED` 设为 `false`，A 版本仍保留为当前线上提示词。
 
-当前第一轮实验以 50/50 比较 `zhouli-v1` 与 `zhouli-v2`。查询时必须按问礼、释礼和客户端分别查看，不能把不同方向的反馈率混在一起。旧的 `incomplete_result` 与新的 `incomplete_*` 都表示生成完整性失败；新记录会进一步区分长度截断、空结果、过短和句尾未收束。
+第一轮实验配置保留为 50/50，但当前已关闭，所有请求使用 `zhouli-v1`。重新开启前必须先用已授权问题复测 `zhouli-v2`；查询时按问礼、释礼和客户端分别查看，不能把不同方向的反馈率混在一起。旧的 `incomplete_result` 与新的 `incomplete_*` 都表示生成完整性失败；新记录会进一步区分长度截断、空结果、过短和句尾未收束。
 
 ## 查询
 
