@@ -16,6 +16,7 @@ yarn-error.log*
 test-runs/
 toy/
 .superpowers/
+.worktrees/
 docs/superpowers/
 scripts/build-toy-package.mjs
 scripts/toy-adapter.test.ts
