@@ -76,7 +76,7 @@ test("uses disabled and conservative defaults", () => {
       AB_TEST_ENABLED: "true",
       AB_TEST_B_PERCENT: "50",
       PROMPT_VERSION_A: "zhouli-v1",
-      PROMPT_VERSION_B: "zhouli-v2",
+      PROMPT_VERSION_B: "zhouli-v3",
     }),
     {
       analyticsEnabled: true,
@@ -85,9 +85,21 @@ test("uses disabled and conservative defaults", () => {
       abTestEnabled: true,
       abTestBPercent: 50,
       promptVersionA: "zhouli-v1",
-      promptVersionB: "zhouli-v2",
+      promptVersionB: "zhouli-v3",
     },
   );
+});
+
+test("production runs the replacement v3 experiment at a 50/50 split", () => {
+  const config = JSON.parse(
+    readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8"),
+  );
+
+  assert.equal(DEFAULT_ANALYTICS_CONFIG.promptVersionB, "zhouli-v3");
+  assert.equal(config.vars.AB_TEST_ENABLED, "true");
+  assert.equal(config.vars.AB_TEST_B_PERCENT, "50");
+  assert.equal(config.vars.PROMPT_VERSION_A, "zhouli-v1");
+  assert.equal(config.vars.PROMPT_VERSION_B, "zhouli-v3");
 });
 
 test("migration defines only aggregate generation fields and retention-aware cases", () => {
