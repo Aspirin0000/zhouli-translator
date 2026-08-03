@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import {
   getAnalyticsConfig,
   parseAnalyticsMeta,
-  parseExperimentBucket,
   type AnalyticsConfig,
   type AnalyticsMeta,
 } from "@/lib/analytics";
@@ -26,7 +25,7 @@ import {
 } from "@/lib/prompt-security";
 import {
   getPromptSet,
-  selectExperimentVariant,
+  selectRandomExperimentVariant,
   type PromptVariant,
 } from "@/lib/prompt-variants";
 import {
@@ -700,7 +699,6 @@ export async function POST(request: NextRequest) {
     surface?: unknown;
     client_version?: unknown;
     release_channel?: unknown;
-    experiment_bucket?: unknown;
   };
 
   try {
@@ -773,11 +771,7 @@ export async function POST(request: NextRequest) {
 
   const runtime = await getAnalyticsRuntime();
   const analyticsConfig = getAnalyticsConfig(runtime.environment);
-  const requestedBucket = parseExperimentBucket(body.experiment_bucket);
-  const experimentBucket =
-    requestedBucket ??
-    (analyticsConfig.abTestEnabled ? Math.floor(Math.random() * 100) : undefined);
-  const variant = selectExperimentVariant(analyticsConfig, experimentBucket);
+  const variant = selectRandomExperimentVariant(analyticsConfig);
   const promptVersion =
     variant === "B"
       ? analyticsConfig.promptVersionB

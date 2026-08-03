@@ -374,7 +374,6 @@ async function fetchTranslateWithRetry(
     surface: ClientSurface;
     client_version: string;
     release_channel: "production" | "preview";
-    experiment_bucket?: number;
   },
   clientId: string,
 ) {
@@ -405,26 +404,6 @@ async function fetchTranslateWithRetry(
   }
 
   throw lastError;
-}
-
-function getExperimentBucket() {
-  const storageKey = `zhouli-experiment-bucket-${clientSurface}`;
-  try {
-    const existing = Number(window.localStorage.getItem(storageKey));
-    if (Number.isInteger(existing) && existing >= 0 && existing <= 99) {
-      return existing;
-    }
-  } catch {
-    // Embedded browsers may not expose persistent storage.
-  }
-
-  const bucket = Math.floor(Math.random() * 100);
-  try {
-    window.localStorage.setItem(storageKey, String(bucket));
-  } catch {
-    // A per-page bucket is acceptable when persistence is unavailable.
-  }
-  return bucket;
 }
 
 function hasSeenPrivacyNotice() {
@@ -692,7 +671,6 @@ export default function Home() {
           surface: clientSurface,
           client_version: clientVersion,
           release_channel: releaseChannel,
-          experiment_bucket: getExperimentBucket(),
         },
         getClientId(),
       );

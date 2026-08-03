@@ -4,7 +4,7 @@
 
 **Goal:** Add a `zhouli-v4` B prompt that is a compact semantic-accuracy extension of A and assign A/B independently at 50/50 for every generation request.
 
-**Architecture:** Keep A's ask and explain builders as the single source of output style. B reuses the complete A system and user prompts, appending only a short direction-specific system note. Remove experiment state from both clients and let the shared Cloudflare Worker choose a fresh variant for each accepted request; keep production A-only until live comparisons are reviewed.
+**Architecture:** Keep A's ask and explain builders as the single source of output style. B keeps the complete A user prompts and derives its system prompts through three localized sentence replacements, with no appended B section. Remove experiment state from both clients and let the shared Cloudflare Worker choose a fresh variant for each accepted request; keep production A-only until live comparisons are reviewed.
 
 **Tech Stack:** Next.js 16 App Router, TypeScript, Node test runner, Cloudflare Workers/OpenNext, Cloudflare D1, DeepSeek API.
 
@@ -13,6 +13,7 @@
 - Variant A remains `zhouli-v1` and its prompt behavior must not change.
 - The new B is `zhouli-v4`; historical `zhouli-v2` and `zhouli-v3` rows remain distinct.
 - B user prompts are byte-for-byte equal to A user prompts for identical input.
+- B system prompts change only two existing ask-rule sentences and one existing explain-rule sentence.
 - B adds no fixed opening, sentence count, verbatim repetition, reversible sentence, or dynamic task contract.
 - Website and Bilibili Toy send no `experiment_bucket` and retain no experiment bucket in storage.
 - Every enabled generation request is independently assigned at 50/50 by the Worker.
@@ -34,7 +35,7 @@
 
 - [ ] **Step 1: Replace old B structural tests with failing minimal-delta tests**
 
-Use an enabled test config with `promptVersionB: "zhouli-v4"`. For both directions, assert that B starts with A's complete system prompt and has exactly the same user prompt:
+Use an enabled test config with `promptVersionB: "zhouli-v4"`. For both directions, assert that B has exactly the same user prompt and only localized system-prompt differences:
 
 ```ts
 const enabledConfig = {
@@ -44,7 +45,7 @@ const enabledConfig = {
   promptVersionB: "zhouli-v4",
 };
 
-test("variant B is a compact ask extension of A", () => {
+test("variant B makes only localized edits inside A's ask prompt", () => {
   const input = {
     text: "老板说年轻人要多吃苦，我该怎样温言相劝",
     mode: "gentle" as const,
@@ -54,11 +55,11 @@ test("variant B is a compact ask extension of A", () => {
   const b = getPromptSet("to_zhouli", "B", enabledConfig, input);
 
   assert.equal(b.promptVersion, "zhouli-v4");
-  assert.ok(b.systemPrompt.startsWith(`${a.systemPrompt}\n\n`));
   assert.equal(b.userPrompt, a.userPrompt);
-  assert.ok(b.systemPrompt.length - a.systemPrompt.length < 700);
-  assert.match(b.systemPrompt, /说话者、对象/);
-  assert.match(b.systemPrompt, /不确定时/);
+  assert.notEqual(b.systemPrompt, a.systemPrompt);
+  assert.match(b.systemPrompt, /明确人物、篇名或引文/);
+  assert.match(b.systemPrompt, /比喻仍只是类比/);
+  assert.match(b.systemPrompt, /不能把请求变成回答或判断/);
 });
 ```
 
@@ -76,21 +77,19 @@ Run: `node --test scripts/prompt-experiment.test.ts`
 
 Expected: FAIL because the current B uses `zhouli-v2`, custom user builders, exact-copy rules, and task contracts.
 
-- [ ] **Step 3: Replace B with two compact system-only deltas**
+- [ ] **Step 3: Replace B with localized edits to A's existing rules**
 
-In `lib/prompt-variants.ts`, remove `extractExplicitRewriteTarget`, `buildVariantBTaskContract`, `buildVariantBZhouliPrompt`, and their structural helpers. Define compact ask and explain notes:
+In `lib/prompt-variants.ts`, remove `extractExplicitRewriteTarget`, `buildVariantBTaskContract`, `buildVariantBZhouliPrompt`, and their structural helpers. Derive B from A with exact replacements so the rest of each prompt remains unchanged:
 
 ```ts
-const ZHOULI_VARIANT_B_GUIDANCE = `实验 B 精度倾向：
-- 保持上述风格、起手、结构和篇幅习惯，不另起一套模板。
-- 润色前先核对说话者、对象、动作、时间、条件、否定、疑问和褒贬，再完成原有的周礼式说理。
-- 少补原文没有的动机、关系、经历和现实事实；有多种理解时，优先选择最直接、最少增义的一种。
-- 典故与旧事以可靠为先；没有把握时，沿用上述泛化旧事，不补精确引文、篇名、人物原话或历史细节。`;
+const ZHOULI_VARIANT_B_SYSTEM_PROMPT = SYSTEM_PROMPT
+  .replace(ASK_ALLUSION_RULE_A, ASK_ALLUSION_RULE_B)
+  .replace(ASK_FIDELITY_RULE_A, ASK_FIDELITY_RULE_B);
 
-const PLAIN_VARIANT_B_GUIDANCE = `实验 B 精度倾向：
-- 保持上述释礼口吻、结构和篇幅习惯，不另起一套模板。
-- 先核对人称、对象、动作、条件、否定、疑问、不确定性和褒贬，再做口语化。
-- 只解释原文有依据的意思；不确定时保留余地，不擅自增加动机、指控或道德判断。`;
+const PLAIN_VARIANT_B_SYSTEM_PROMPT = PLAIN_SYSTEM_PROMPT.replace(
+  PLAIN_ALLUSION_RULE_A,
+  PLAIN_ALLUSION_RULE_B,
+);
 ```
 
 Assemble B with the same base user prompt as A:
@@ -104,10 +103,11 @@ const userPrompt = isPlain
 return {
   variant,
   promptVersion: variant === "B" ? config.promptVersionB : config.promptVersionA,
-  systemPrompt:
-    variant === "B"
-      ? `${systemPrompt}\n\n${isPlain ? PLAIN_VARIANT_B_GUIDANCE : ZHOULI_VARIANT_B_GUIDANCE}`
-      : systemPrompt,
+  systemPrompt: variant === "B"
+    ? isPlain
+      ? PLAIN_VARIANT_B_SYSTEM_PROMPT
+      : ZHOULI_VARIANT_B_SYSTEM_PROMPT
+    : systemPrompt,
   userPrompt,
 };
 ```
@@ -404,3 +404,13 @@ artifacts, build output, evaluator, and reports remain ignored.
 Report representative A/B examples, aggregate blind wins, semantic failures,
 opening/length/paragraph similarity, and all verification commands. State
 explicitly that production remains A-only and no deployment or push occurred.
+
+---
+
+## Release Addendum
+
+After local review, the user explicitly approved submission and deployment.
+The release commit changes `AB_TEST_ENABLED` to `true`, keeps
+`AB_TEST_B_PERCENT=50`, and preserves `AB_TEST_ENABLED=false` as the immediate
+A-only rollback. All build, security, and dry-run checks must be repeated after
+this configuration change before production deployment.

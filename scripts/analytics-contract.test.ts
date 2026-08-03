@@ -67,6 +67,7 @@ test("validates bounded client analytics metadata without identifying a user", (
 });
 
 test("uses disabled and conservative defaults", () => {
+  assert.equal(DEFAULT_ANALYTICS_CONFIG.promptVersionB, "zhouli-v4");
   assert.deepEqual(getAnalyticsConfig({}), DEFAULT_ANALYTICS_CONFIG);
   assert.deepEqual(
     getAnalyticsConfig({
@@ -76,7 +77,7 @@ test("uses disabled and conservative defaults", () => {
       AB_TEST_ENABLED: "true",
       AB_TEST_B_PERCENT: "50",
       PROMPT_VERSION_A: "zhouli-v1",
-      PROMPT_VERSION_B: "zhouli-v2",
+      PROMPT_VERSION_B: "zhouli-v4",
     }),
     {
       analyticsEnabled: true,
@@ -85,9 +86,20 @@ test("uses disabled and conservative defaults", () => {
       abTestEnabled: true,
       abTestBPercent: 50,
       promptVersionA: "zhouli-v1",
-      promptVersionB: "zhouli-v2",
+      promptVersionB: "zhouli-v4",
     },
   );
+});
+
+test("enables the production even v4 split", () => {
+  const config = JSON.parse(
+    readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8"),
+  );
+
+  assert.equal(config.vars.AB_TEST_ENABLED, "true");
+  assert.equal(config.vars.AB_TEST_B_PERCENT, "50");
+  assert.equal(config.vars.PROMPT_VERSION_A, "zhouli-v1");
+  assert.equal(config.vars.PROMPT_VERSION_B, "zhouli-v4");
 });
 
 test("migration defines only aggregate generation fields and retention-aware cases", () => {
@@ -191,4 +203,18 @@ test("accepted cases do not expose the submission action again", () => {
     page,
     /feedbackSubmitted && feedbackReasons\.length > 0 && !caseSubmitted && !showCaseConsent && feedbackToken/,
   );
+});
+
+test("clients leave each generation assignment to the Worker", () => {
+  const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const route = readFileSync(
+    new URL("../app/api/translate/route.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.doesNotMatch(page, /zhouli-experiment-bucket/);
+  assert.doesNotMatch(page, /experiment_bucket/);
+  assert.doesNotMatch(route, /body\.experiment_bucket/);
+  assert.doesNotMatch(route, /parseExperimentBucket/);
+  assert.match(route, /selectRandomExperimentVariant\(analyticsConfig\)/);
 });
