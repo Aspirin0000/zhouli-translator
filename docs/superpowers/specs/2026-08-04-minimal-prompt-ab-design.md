@@ -17,11 +17,13 @@ mixed with historical `zhouli-v2` or `zhouli-v3` rows.
 
 Variant B reuses A without replacing any of its established prompt builders:
 
-- Ask uses `SYSTEM_PROMPT` and `buildUserPrompt` exactly as A does.
-- Explain uses `PLAIN_SYSTEM_PROMPT` and `buildPlainPrompt` exactly as A does.
+- Ask derives its system prompt from `SYSTEM_PROMPT` with two localized text
+  replacements and uses `buildUserPrompt` exactly as A does.
+- Explain derives its system prompt from `PLAIN_SYSTEM_PROMPT` with one
+  localized text replacement and uses `buildPlainPrompt` exactly as A does.
 - B's user prompt is byte-for-byte equal to A's for the same input.
-- B's system prompt starts with the complete A system prompt and appends one
-  short direction-specific guidance block.
+- B does not append a second instruction block or introduce a new prompt
+  section. All unchanged system-prompt text remains byte-for-byte equal to A.
 - Tone, level, examples, preferred `我听闻` opening frequency, paragraph
   structure, and length behavior remain controlled by A.
 
@@ -31,25 +33,20 @@ It must not introduce input-specific task contracts.
 
 ### Ask Delta
 
-The ask guidance softly prioritizes:
+The ask delta changes only two existing A rules:
 
-1. Preserve the original speaker, audience, object, tense, conditions,
-   uncertainty, question or request, and sentiment before polishing the joke.
-2. Prefer interpretations supported directly by the source and avoid adding
-   motives, relationships, experiences, or real-world facts.
-3. Keep A's established storytelling and Zhouli rhythm instead of restating the
-   input as a mandatory first sentence.
-4. Treat historical flavor as a factual-restraint problem rather than a request
-   for more allusions: use only high-confidence common knowledge, never invent
-   exact quotations, titles, events, or attribution, and fall back to A's
-   generic old-time scene when uncertain.
+1. The fake-citation rule says explicit people, titles, or quotations are used
+   only when reliable; uncertain material remains a generic old-time scene.
+2. The semantic-reversibility rule clarifies that a metaphor stays a metaphor
+   rather than becoming a source fact, and that a request must not turn into an
+   answer or judgment.
 
 ### Explain Delta
 
-The explain guidance softly prioritizes preserving person, target, speech act,
-negation, conditions, and uncertainty. It discourages unsupported motives and
-moral judgments while retaining A's existing mode, length, and conversational
-style. It adds no required first sentence or output template.
+The explain delta changes only the existing uncertain-allusion rule: fictional
+or uncertain old stories are treated as stylistic packaging, and only claims
+supported by the text are translated into plain language. It adds no required
+first sentence or output template.
 
 ## Per-Generation Assignment
 
@@ -91,7 +88,8 @@ Automated contracts must prove:
 
 - A prompt behavior is unchanged.
 - B's user prompts equal A's for identical inputs.
-- B's system prompts begin with A and add only a compact delta.
+- B's system prompts differ from A only at the three documented rule sentences
+  and contain no appended experiment guidance block.
 - B contains none of the retired hard structural rules.
 - The browser has no experiment storage key or `experiment_bucket` payload.
 - Each Worker request invokes assignment anew; deterministic injected random

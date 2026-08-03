@@ -12,16 +12,18 @@ import type { AnalyticsConfig } from "./analytics.ts";
 
 export type PromptVariant = "A" | "B";
 
-const ZHOULI_VARIANT_B_GUIDANCE = `实验 B 精度倾向：
-- 保持上述风格、起手、结构和篇幅习惯，不另起一套模板。
-- 润色前先核对说话者、对象、动作、时间、条件、否定、疑问和褒贬，再完成原有的周礼式说理。
-- 少补原文没有的动机、关系、经历和现实事实；有多种理解时，优先选择最直接、最少增义的一种。
-- 典故与旧事以可靠为先；不确定时，沿用上述泛化旧事，不补精确引文、篇名、人物原话或历史细节。`;
+const ZHOULI_VARIANT_B_SYSTEM_PROMPT = SYSTEM_PROMPT.replace(
+  "需要古风依据时，改写成“若按礼法来看”“古人会觉得”“我听闻有这样一个道理”“我听说从前有个贤人，他遇到过一件事……”这类明显是讲故事的白话。",
+  "明确人物、篇名或引文只有确认可靠时才使用；不确定时仍写成“若按礼法来看”“古人会觉得”“我听闻有这样一个道理”“我听说从前有个人，他遇到过一件事……”这类泛化旧事。",
+).replace(
+  "可以加比喻，但不能新增事实、不能更换对象、不能把请求变成判断、不能把吐槽变成夸奖。",
+  "可以加比喻，但比喻仍只是类比，不当作原话事实；不能更换对象、不能把请求变成回答或判断、不能把吐槽变成夸奖。",
+);
 
-const PLAIN_VARIANT_B_GUIDANCE = `实验 B 精度倾向：
-- 保持上述释礼口吻、结构和篇幅习惯，不另起一套模板。
-- 先核对人称、对象、动作、条件、否定、疑问、不确定性和褒贬，再做口语化。
-- 只解释原文有依据的意思；不确定时保留余地，不擅自增加动机、指控或道德判断。`;
+const PLAIN_VARIANT_B_SYSTEM_PROMPT = PLAIN_SYSTEM_PROMPT.replace(
+  "6. 遇到不确定的典故或明显胡编的旧事，不要把它当真，只提炼它服务的观点。",
+  "6. 遇到不确定的典故或明显胡编的旧事，先当作风格包装，只提炼有文本依据的观点，不把故事细节当成事实。",
+);
 
 export function selectExperimentVariant(
   config: AnalyticsConfig,
@@ -78,11 +80,9 @@ export function getPromptSet(
       variant === "B" ? config.promptVersionB : config.promptVersionA,
     systemPrompt:
       variant === "B"
-        ? `${systemPrompt}\n\n${
-            isPlain
-              ? PLAIN_VARIANT_B_GUIDANCE
-              : ZHOULI_VARIANT_B_GUIDANCE
-          }`
+        ? isPlain
+          ? PLAIN_VARIANT_B_SYSTEM_PROMPT
+          : ZHOULI_VARIANT_B_SYSTEM_PROMPT
         : systemPrompt,
     userPrompt,
   };

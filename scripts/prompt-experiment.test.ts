@@ -21,7 +21,7 @@ const enabledConfig = {
 };
 
 const retiredHardRules =
-  /可逆主句|总共只写两句|逐字输出|必须连续保留|原样保留|以原问句收尾/u;
+  /实验 B|可逆主句|总共只写两句|逐字输出|必须连续保留|以原问句收尾|第二人称“你”通常是收话者|请求或问句仍由原说话者提出|不要代替收话者回答|故事和比喻只服务原意/u;
 
 test("experiment assignment is deterministic for a supplied bucket", () => {
   assert.equal(selectExperimentVariant(enabledConfig, 10), "B");
@@ -88,7 +88,7 @@ test("variant A continues to use the established explain prompt", () => {
   );
 });
 
-test("variant B is a compact ask extension of A", () => {
+test("variant B makes only localized edits inside A's ask prompt", () => {
   const input = {
     text: "老板说年轻人要多吃苦，我该怎样温言相劝",
     mode: "gentle" as const,
@@ -99,19 +99,21 @@ test("variant B is a compact ask extension of A", () => {
 
   assert.equal(b.variant, "B");
   assert.equal(b.promptVersion, "zhouli-v4");
-  assert.ok(b.systemPrompt.startsWith(`${a.systemPrompt}\n\n`));
   assert.equal(b.userPrompt, a.userPrompt);
-  assert.ok(b.systemPrompt.length - a.systemPrompt.length < 700);
-  assert.match(b.systemPrompt, /说话者、对象/u);
-  assert.match(b.systemPrompt, /不确定时/u);
-  assert.match(b.systemPrompt, /不另起一套模板/u);
-  assert.doesNotMatch(
-    b.systemPrompt.slice(a.systemPrompt.length),
-    retiredHardRules,
+  assert.notEqual(b.systemPrompt, a.systemPrompt);
+  assert.ok(Math.abs(b.systemPrompt.length - a.systemPrompt.length) < 160);
+  assert.ok(
+    b.systemPrompt.startsWith(
+      a.systemPrompt.slice(0, a.systemPrompt.indexOf("14. 严禁伪装")),
+    ),
   );
+  assert.match(b.systemPrompt, /明确人物、篇名或引文/u);
+  assert.match(b.systemPrompt, /比喻仍只是类比/u);
+  assert.match(b.systemPrompt, /不能把请求变成回答或判断/u);
+  assert.doesNotMatch(b.systemPrompt, retiredHardRules);
 });
 
-test("variant B is a compact explain extension of A", () => {
+test("variant B makes only a localized edit inside A's explain prompt", () => {
   const input = {
     text: "我听闻，此事或有转机，只是不知该如何开口相求。",
     level: "standard" as const,
@@ -122,16 +124,17 @@ test("variant B is a compact explain extension of A", () => {
 
   assert.equal(b.variant, "B");
   assert.equal(b.promptVersion, "zhouli-v4");
-  assert.ok(b.systemPrompt.startsWith(`${a.systemPrompt}\n\n`));
   assert.equal(b.userPrompt, a.userPrompt);
-  assert.ok(b.systemPrompt.length - a.systemPrompt.length < 500);
-  assert.match(b.systemPrompt, /人称、对象/u);
-  assert.match(b.systemPrompt, /不确定时/u);
-  assert.match(b.systemPrompt, /不另起一套模板/u);
-  assert.doesNotMatch(
-    b.systemPrompt.slice(a.systemPrompt.length),
-    retiredHardRules,
+  assert.notEqual(b.systemPrompt, a.systemPrompt);
+  assert.ok(Math.abs(b.systemPrompt.length - a.systemPrompt.length) < 80);
+  assert.ok(
+    b.systemPrompt.startsWith(
+      a.systemPrompt.slice(0, a.systemPrompt.indexOf("6. 遇到不确定的典故")),
+    ),
   );
+  assert.match(b.systemPrompt, /先当作风格包装/u);
+  assert.match(b.systemPrompt, /不把故事细节当成事实/u);
+  assert.doesNotMatch(b.systemPrompt, retiredHardRules);
 });
 
 test("variant B keeps A's full rewrite request instead of extracting a new task", () => {
