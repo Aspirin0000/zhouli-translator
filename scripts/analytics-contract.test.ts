@@ -91,12 +91,12 @@ test("uses disabled and conservative defaults", () => {
   );
 });
 
-test("keeps production on A while preparing an even v4 split", () => {
+test("enables the production even v4 split", () => {
   const config = JSON.parse(
     readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8"),
   );
 
-  assert.equal(config.vars.AB_TEST_ENABLED, "false");
+  assert.equal(config.vars.AB_TEST_ENABLED, "true");
   assert.equal(config.vars.AB_TEST_B_PERCENT, "50");
   assert.equal(config.vars.PROMPT_VERSION_A, "zhouli-v1");
   assert.equal(config.vars.PROMPT_VERSION_B, "zhouli-v4");

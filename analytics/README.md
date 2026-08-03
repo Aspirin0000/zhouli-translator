@@ -10,15 +10,15 @@
 ANALYTICS_ENABLED=true
 FEEDBACK_UI_ENABLED=true
 CASE_SUBMISSION_ENABLED=true
-AB_TEST_ENABLED=false
+AB_TEST_ENABLED=true
 AB_TEST_B_PERCENT=50
 PROMPT_VERSION_A=zhouli-v1
 PROMPT_VERSION_B=zhouli-v4
 ```
 
-A/B 实验只改变提示词版本。关闭实验时把 `AB_TEST_ENABLED` 设为 `false`，A 版本仍保留为当前线上提示词。
+A/B 实验只改变提示词版本。生产环境当前启用 50/50 实验；需要暂停时把 `AB_TEST_ENABLED` 设为 `false`，所有请求会立即回到 A 版本。
 
-实验配置保留为 50/50，但当前已关闭，所有请求使用 `zhouli-v1`。启用后，Worker 会为每次生成独立随机分配 `zhouli-v1` 或 `zhouli-v4`；客户端不能指定或固定实验桶。同一浏览器的连续请求可能进入不同版本，这是本轮实验的预期行为。
+Worker 会为每次生成独立随机分配 `zhouli-v1` 或 `zhouli-v4`；客户端不能指定或固定实验桶。同一浏览器的连续请求可能进入不同版本，这是本轮实验的预期行为。
 
 `zhouli-v2` 与 `zhouli-v3` 的历史记录只作为旧实验数据保留，分析时不得与 `zhouli-v4` 合并。查询时还应按问礼、释礼和客户端分别查看，不能把不同方向的反馈率混在一起。旧的 `incomplete_result` 与新的 `incomplete_*` 都表示生成完整性失败；新记录会进一步区分长度截断、空结果、过短和句尾未收束。
 

@@ -404,3 +404,13 @@ artifacts, build output, evaluator, and reports remain ignored.
 Report representative A/B examples, aggregate blind wins, semantic failures,
 opening/length/paragraph similarity, and all verification commands. State
 explicitly that production remains A-only and no deployment or push occurred.
+
+---
+
+## Release Addendum
+
+After local review, the user explicitly approved submission and deployment.
+The release commit changes `AB_TEST_ENABLED` to `true`, keeps
+`AB_TEST_B_PERCENT=50`, and preserves `AB_TEST_ENABLED=false` as the immediate
+A-only rollback. All build, security, and dry-run checks must be repeated after
+this configuration change before production deployment.

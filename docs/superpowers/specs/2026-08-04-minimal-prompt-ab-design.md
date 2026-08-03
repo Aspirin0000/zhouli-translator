@@ -104,7 +104,7 @@ no production secrets.
 
 ## Release Boundary
 
-Implementation and evaluation happen locally first. Production remains A-only
-until the comparison results are reviewed. Enabling the production 50/50 flag,
-deploying Cloudflare, and publishing Git changes require a separate explicit
-release instruction.
+Implementation and evaluation happen locally first. After the comparison
+results are reviewed and an explicit release instruction is given, production
+uses a 50/50 per-generation split. Setting `AB_TEST_ENABLED=false` remains the
+immediate rollback path to A-only operation.
