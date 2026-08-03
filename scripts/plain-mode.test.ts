@@ -125,7 +125,8 @@ test("API guards against visibly incomplete model output", () => {
     "utf8",
   );
 
-  assert.match(routeSource, /looksIncompleteGeneratedText/);
+  assert.match(routeSource, /assessGeneratedText/);
+  assert.match(routeSource, /buildIncompleteRetryInstruction/);
   assert.match(routeSource, /finish_reason/);
   assert.match(routeSource, /此言尚未成礼/);
 });
@@ -136,7 +137,7 @@ test("plain API allows very short valid explanations for one-character inputs", 
     "utf8",
   );
 
-  assert.match(routeSource, /getPlainMinimumResultLength/);
+  assert.match(routeSource, /getMinimumResultLength/);
   assert.match(routeSource, /SHORT_PLAIN_RESULTS/);
   assert.match(routeSource, /善[\s\S]{0,80}好/);
   assert.match(routeSource, /可也[\s\S]{0,80}可以/);

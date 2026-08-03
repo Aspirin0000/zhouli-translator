@@ -20,6 +20,14 @@ const levelInstructions: Record<ZhouliLevel, string> = {
   grand: "大礼：280到450字，可以层层类比，但不要水文，不要重复同一个意思。",
 };
 
+export function getZhouliModeInstruction(mode: ZhouliMode) {
+  return modeInstructions[mode];
+}
+
+export function getZhouliLevelInstruction(level: ZhouliLevel) {
+  return levelInstructions[level];
+}
+
 const plainModeInstructions: Record<PlainMode, string> = {
   direct:
     "直白释义：像网友直接把意思讲出来，把原文翻成普通人话。短句优先，可以有一点吐槽，但不要先加“这段话是在说”之类外壳，不要阴阳怪气、不要加戏。若原文在问“怎么说/怎么回复/如何体面”，只翻出发言者正在求一个体面说法，别直接替它回答，也别替它定罪；若原文明确引用了待改写句子，要保留这句子的关键对象和评价。",

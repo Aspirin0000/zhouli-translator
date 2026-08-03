@@ -17,7 +17,7 @@ const clientSurface: ClientSurface =
     : "web";
 const releaseChannel =
   process.env.NEXT_PUBLIC_RELEASE_CHANNEL === "preview" ? "preview" : "production";
-const clientVersion = `${clientSurface === "bilibili_toy" ? "toy" : "web"}-2026.07.27`;
+const clientVersion = `${clientSurface === "bilibili_toy" ? "toy" : "web"}-2026.08.03`;
 
 const feedbackConfigs: Record<
   ZhouliDirection,
