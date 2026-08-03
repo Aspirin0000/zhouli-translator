@@ -46,6 +46,6 @@
     "AB_TEST_ENABLED": "false",
     "AB_TEST_B_PERCENT": "50",
     "PROMPT_VERSION_A": "zhouli-v1",
-    "PROMPT_VERSION_B": "zhouli-v2"
+    "PROMPT_VERSION_B": "zhouli-v4"
   }
 }
