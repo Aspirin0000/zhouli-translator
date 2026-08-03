@@ -192,3 +192,17 @@ test("accepted cases do not expose the submission action again", () => {
     /feedbackSubmitted && feedbackReasons\.length > 0 && !caseSubmitted && !showCaseConsent && feedbackToken/,
   );
 });
+
+test("clients leave each generation assignment to the Worker", () => {
+  const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const route = readFileSync(
+    new URL("../app/api/translate/route.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.doesNotMatch(page, /zhouli-experiment-bucket/);
+  assert.doesNotMatch(page, /experiment_bucket/);
+  assert.doesNotMatch(route, /body\.experiment_bucket/);
+  assert.doesNotMatch(route, /parseExperimentBucket/);
+  assert.match(route, /selectRandomExperimentVariant\(analyticsConfig\)/);
+});

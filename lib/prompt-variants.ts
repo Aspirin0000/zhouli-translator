@@ -40,6 +40,15 @@ export function selectExperimentVariant(
   return bucket < config.abTestBPercent ? "B" : "A";
 }
 
+export function selectRandomExperimentVariant(
+  config: AnalyticsConfig,
+  random: () => number = Math.random,
+): PromptVariant {
+  if (!config.abTestEnabled) return "A";
+  const bucket = Math.min(99, Math.max(0, Math.floor(random() * 100)));
+  return selectExperimentVariant(config, bucket);
+}
+
 export function getPromptSet(
   direction: ZhouliDirection,
   requestedVariant: PromptVariant,

@@ -4,6 +4,7 @@ import { DEFAULT_ANALYTICS_CONFIG } from "../lib/analytics.ts";
 import {
   getPromptSet,
   selectExperimentVariant,
+  selectRandomExperimentVariant,
 } from "../lib/prompt-variants.ts";
 import {
   buildPlainPrompt,
@@ -26,6 +27,29 @@ test("experiment assignment is deterministic for a supplied bucket", () => {
   assert.equal(selectExperimentVariant(enabledConfig, 10), "B");
   assert.equal(selectExperimentVariant(enabledConfig, 60), "A");
   assert.equal(selectExperimentVariant(enabledConfig, undefined), "A");
+});
+
+test("each enabled assignment uses the current random draw", () => {
+  const draws = [0.01, 0.99];
+  const random = () => draws.shift() ?? 0.5;
+
+  assert.equal(selectRandomExperimentVariant(enabledConfig, random), "B");
+  assert.equal(selectRandomExperimentVariant(enabledConfig, random), "A");
+  assert.equal(draws.length, 0);
+});
+
+test("disabled assignment stays on A without drawing randomness", () => {
+  let draws = 0;
+  const variant = selectRandomExperimentVariant(
+    DEFAULT_ANALYTICS_CONFIG,
+    () => {
+      draws += 1;
+      return 0;
+    },
+  );
+
+  assert.equal(variant, "A");
+  assert.equal(draws, 0);
 });
 
 test("disabled experiments keep the current prompt", () => {
