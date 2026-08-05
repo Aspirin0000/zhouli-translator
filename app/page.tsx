@@ -11,13 +11,33 @@ import type {
 } from "@/lib/prompt";
 import type { ClientSurface, EventType, NegativeReason } from "@/lib/analytics";
 
-const clientSurface: ClientSurface =
-  process.env.NEXT_PUBLIC_CLIENT_SURFACE === "bilibili_toy"
+const toyHostnames = new Set([
+  "www.bilibilitoy.com",
+  "bilibilitoy.com",
+  "www.bebox.net",
+]);
+
+function detectClientSurface(): ClientSurface {
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname.toLowerCase();
+    const isBilibiliToyPath =
+      (hostname === "www.bilibili.com" || hostname === "bilibili.com") &&
+      window.location.pathname.startsWith("/toy/");
+
+    if (toyHostnames.has(hostname) || isBilibiliToyPath) {
+      return "bilibili_toy";
+    }
+  }
+
+  return process.env.NEXT_PUBLIC_CLIENT_SURFACE === "bilibili_toy"
     ? "bilibili_toy"
     : "web";
+}
+
+const clientSurface = detectClientSurface();
 const releaseChannel =
   process.env.NEXT_PUBLIC_RELEASE_CHANNEL === "preview" ? "preview" : "production";
-const clientVersion = `${clientSurface === "bilibili_toy" ? "toy" : "web"}-2026.08.03`;
+const clientVersion = `${clientSurface === "bilibili_toy" ? "toy" : "web"}-2026.08.05`;
 
 const feedbackConfigs: Record<
   ZhouliDirection,

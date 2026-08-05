@@ -19,6 +19,16 @@ test("accepts only the two public client surfaces", () => {
   assert.equal(isClientSurface("web:user-123"), false);
 });
 
+test("detects the Toy surface from its runtime host", () => {
+  const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+
+  assert.match(page, /window\.location\.hostname/);
+  assert.match(page, /www\.bilibilitoy\.com/);
+  assert.match(page, /www\.bilibili\.com/);
+  assert.match(page, /pathname\.startsWith\("\/toy\/"\)/);
+  assert.match(page, /2026\.08\.05/);
+});
+
 test("accepts only documented release channels, events, and reasons", () => {
   assert.equal(isReleaseChannel("production"), true);
   assert.equal(isReleaseChannel("preview"), true);
